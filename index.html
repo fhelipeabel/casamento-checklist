@@ -703,6 +703,24 @@
     
     .item-edit { color: var(--blue-medium); }
 
+  
+    .item-due {
+      font-size: 0.65rem;
+      font-weight: 500;
+      color: #8c765c;
+      background: #fcf8f2;
+      border: 1px solid #ebdccb;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      align-self: center;
+      flex-shrink: 0;
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
   </style>
 </head>
 
@@ -762,13 +780,13 @@
     const DATA = [
       {
         id: 'geral', icon: '📋', name: 'Geral', items: [
-          { id: 'g1', label: 'Definição da data', done: true, assignee: 'Fhelipe' },
-          { id: 'g2', label: 'Lista de convidados', done: true, assignee: 'Maria' },
+          { id: 'g1', label: 'Definição da data', done: true, assignee: 'Fhelipe', due_period: '12 meses antes' },
+          { id: 'g2', label: 'Lista de convidados', done: true, assignee: 'Maria', due_period: '12 meses antes' },
           { id: 'g3', label: 'Escolha de padrinhos', done: true, assignee: 'Helena' },
           { id: 'g4', label: 'Convites personalizados para padrinhos', done: true, assignee: 'Fhelipe' },
           { id: 'g5', label: 'Escolha de damas e pagens', done: true, assignee: 'Maria' },
           { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.', assignee: 'Helena' },
-          { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker' },
+          { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker', due_period: '6 meses antes' },
           { id: 'g8', label: 'Ensaio de fotos (pré-wedding)' },
           { id: 'g9', label: 'Levar fotos retrospectiva para o fotógrafo' },
           { id: 'g10', label: 'Entrevista dos noivos', tip: 'Confirmar data/hora com o fotógrafo ou videomaker.' },
@@ -930,14 +948,14 @@
       },
       {
         id: 'luademel', icon: '🌙', name: 'Lua de Mel', items: [
-          { id: 'lm1', label: 'Hotel para a noite de núpcias — reservar', tag: 'urgente' },
+          { id: 'lm1', label: 'Hotel para a noite de núpcias — reservar', tag: 'urgente', due_period: '3 meses antes' },
           { id: 'lm2', label: 'Destino da lua de mel — definir' },
           { id: 'lm3', label: 'Agência de turismo — pesquisar e contratar' },
           { id: 'lm4', label: 'Passagens aéreas — comprar' },
           { id: 'lm5', label: 'Hotel durante a viagem — reservar' },
           { id: 'lm6', label: 'Roteiro de passeios — planejar' },
           { id: 'lm7', label: 'Malas para viagem — preparar lista' },
-          { id: 'lm8', label: 'Verificar documentos válidos (passaporte, visto)', tip: 'Passaporte deve ter validade mínima de 6 meses.', tag: 'novo' },
+          { id: 'lm8', label: 'Verificar documentos válidos (passaporte, visto)', tip: 'Passaporte deve ter validade mínima de 6 meses.', tag: 'novo', due_period: '1 mês antes' },
           { id: 'lm9', label: 'Seguro viagem — contratar', tag: 'novo' },
         ]
       },
@@ -1056,6 +1074,7 @@
               ${item.tip ? `<div class="item-tip">💡 ${item.tip}</div>` : ''}
             </div>
             ${item.tag ? `<span class="item-tag ${item.tag}">${item.tag === 'urgente' ? '🔴 urgente' : item.tag === 'novo' ? '🌿 sugestão' : item.tag}</span>` : ''}
+            ${item.due_period ? `<span class="item-due">⏱️ ${item.due_period}</span>` : ''}
             ${item.assignee ? item.assignee.split(',').map(a => a.trim()).map(a => `<span class="item-assignee ${a}">${a}</span>`).join('') : ''}
             <div class="item-action item-edit" onclick="event.stopPropagation(); openModal('${item.id}')">✏️</div>
             <div class="item-action item-delete" onclick="event.stopPropagation(); removeTask(event, '${item.id}')">🗑️</div>
@@ -1121,6 +1140,16 @@
         }).join('');
       }
       
+      let currentDue = '';
+      if (editId) {
+        DATA.forEach(s => {
+          const it = s.items.find(i => i.id === editId);
+          if (it) currentDue = it.due_period || '';
+        });
+      }
+      const dueSelect = document.getElementById('newTaskDuePeriod');
+      if(dueSelect) dueSelect.value = currentDue;
+
       const labelInput = document.getElementById('newTaskLabel');
       if(labelInput) labelInput.value = currentLabel;
       
@@ -1166,13 +1195,15 @@
         const checkedBoxes = Array.from(document.querySelectorAll('input[name="taskAssignees"]:checked'));
         const assignee = checkedBoxes.map(cb => cb.value).join(', ');
         
+        const due_period = document.getElementById('newTaskDuePeriod').value;
+        
         if(!label) return alert('Preencha a tarefa!');
 
         const item_id = editingItemId || ('custom_' + Date.now());
         const doneStatus = editingItemId ? !!state[item_id] : false;
 
         const { error } = await db.from('checklist').upsert({
-          item_id, done: doneStatus, label, section_id, assignee: assignee || null, deleted: false
+          item_id, done: doneStatus, label, section_id, assignee: assignee || null, due_period: due_period || null, deleted: false
         });
         
         if(error) throw error;
@@ -1185,12 +1216,13 @@
             if(it) {
               it.label = label;
               it.assignee = assignee || null;
+              it.due_period = due_period || null;
             }
           });
         } else {
           const section = DATA.find(s => s.id === section_id);
           if(section) {
-            section.items.push({ id: item_id, label, assignee: assignee || null, tag: 'novo' });
+            section.items.push({ id: item_id, label, assignee: assignee || null, due_period: due_period || null, tag: 'novo' });
           }
         }
         
@@ -1417,6 +1449,22 @@
 
 
       
+
+      
+      <div class="form-group">
+        <label>Prazo sugerido (Até quanto tempo antes?)</label>
+        <select id="newTaskDuePeriod">
+          <option value="">Sem prazo definido</option>
+          <option value="12 meses antes">12 meses antes</option>
+          <option value="9 meses antes">9 meses antes</option>
+          <option value="6 meses antes">6 meses antes</option>
+          <option value="3 meses antes">3 meses antes</option>
+          <option value="1 mês antes">1 mês antes</option>
+          <option value="15 dias antes">15 dias antes</option>
+          <option value="Na semana">Na semana do casamento</option>
+          <option value="No dia">No dia do casamento</option>
+        </select>
+      </div>
 
       <div class="modal-actions">
         <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
