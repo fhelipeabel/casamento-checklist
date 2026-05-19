@@ -777,7 +777,7 @@
     let editingItemId = null;
     // ─────────────────────────────────────────────────────────────────────────────
 
-    const DATA = [
+    const INITIAL_DATA = [
       {
         id: 'geral', icon: '📋', name: 'Geral', items: [
           { id: 'g1', label: 'Definição da data', done: true, assignee: 'Fhelipe', due_period: '12 meses antes' },
@@ -961,6 +961,8 @@
       },
     ];
 
+    let DATA = [];
+
     // ─── STATE ───────────────────────────────────────────────────────────────────
     let state = {};          // { item_id: true/false }
     let currentFilter = 'all';
@@ -969,20 +971,120 @@
     let channel = null;
 
     // ─── SUPABASE HELPERS ────────────────────────────────────────────────────────
+    function setSyncStatus(status) {
+      const el = document.getElementById('syncStatus');
+      if (!el) return;
+      el.className = 'sync-status ' + status;
+      if (status === 'online') {
+        el.innerHTML = '● sincronizado';
+      } else if (status === 'syncing') {
+        el.innerHTML = '⏳ sincronizando...';
+      } else if (status === 'offline') {
+        el.innerHTML = '⚠️ erro de conexão';
+      }
+    }
+
+    async function refreshData() {
+      await loadFromDB();
+      updateAssigneeFilters();
+      renderAll();
+      renderGeral();
+    }
+
     async function loadFromDB() {
-      const { data, error } = await db.from('checklist').select('*');
-      if (error) { console.error(error); return; }
-      state = {};
-      data.forEach(row => { 
-        state[row.item_id] = row.done; 
-      });
-      
-      // Seed initial done items se banco vazio
-      const allItems = DATA.flatMap(s => s.items);
-      const seedItems = allItems.filter(it => it.done && state[it.id] === undefined);
-      if (seedItems.length > 0) {
-        await db.from('checklist').upsert(seedItems.map(it => ({ item_id: it.id, done: true })));
-        seedItems.forEach(it => { state[it.id] = true; });
+      setSyncStatus('syncing');
+      try {
+        const { data, error } = await db.from('checklist').select('*');
+        if (error) {
+          console.error(error);
+          setSyncStatus('offline');
+          return;
+        }
+        
+        // Re-initialize DATA from the template INITIAL_DATA
+        DATA = JSON.parse(JSON.stringify(INITIAL_DATA));
+        state = {};
+        
+        data.forEach(row => {
+          state[row.item_id] = !!row.done;
+
+          // If the item is marked as deleted in the database, remove it from DATA
+          if (row.deleted) {
+            DATA.forEach(section => {
+              section.items = section.items.filter(item => item.id !== row.item_id);
+            });
+            return;
+          }
+
+          // Search for the item in DATA
+          let foundItem = null;
+          let foundSection = null;
+          for (const section of DATA) {
+            const item = section.items.find(it => it.id === row.item_id);
+            if (item) {
+              foundItem = item;
+              foundSection = section;
+              break;
+            }
+          }
+
+          if (foundItem) {
+            // Update properties from the database if they exist
+            if (row.label) foundItem.label = row.label;
+            if (row.assignee !== undefined && row.assignee !== null) foundItem.assignee = row.assignee;
+            if (row.due_period !== undefined && row.due_period !== null) foundItem.due_period = row.due_period;
+            // Move item to correct section if it was edited
+            if (row.section_id && foundSection.id !== row.section_id) {
+              foundSection.items = foundSection.items.filter(it => it.id !== row.item_id);
+              const targetSection = DATA.find(s => s.id === row.section_id);
+              if (targetSection) {
+                targetSection.items.push(foundItem);
+              } else {
+                foundSection.items.push(foundItem);
+              }
+            }
+          } else {
+            // It's a custom item added on another device (or this device in a previous session)
+            if (row.label && row.section_id) {
+              const targetSection = DATA.find(s => s.id === row.section_id) || DATA[0];
+              if (targetSection) {
+                targetSection.items.push({
+                  id: row.item_id,
+                  label: row.label,
+                  assignee: row.assignee || null,
+                  due_period: row.due_period || null,
+                  tag: 'novo'
+                });
+              }
+            }
+          }
+        });
+
+        // Seed initial done items if db is empty (meaning no items have been checked/configured)
+        if (data.length === 0) {
+          const allItems = DATA.flatMap(s => s.items);
+          const seedItems = allItems.filter(it => it.done);
+          if (seedItems.length > 0) {
+            await db.from('checklist').upsert(seedItems.map(it => {
+              const sec = DATA.find(s => s.items.includes(it));
+              return {
+                item_id: it.id,
+                done: true,
+                label: it.label,
+                section_id: sec ? sec.id : 'geral',
+                assignee: it.assignee || null,
+                due_period: it.due_period || null,
+                deleted: false
+              };
+            }));
+            seedItems.forEach(it => { state[it.id] = true; });
+          }
+        }
+        
+        setSyncStatus('online');
+      } catch (err) {
+        console.error(err);
+        setSyncStatus('offline');
       }
     }
 
@@ -993,23 +1095,25 @@
       const newVal = !state[id];
       state[id] = newVal;
 
+      setSyncStatus('syncing');
       try {
         const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
         if (error) throw error;
+        setSyncStatus('online');
       } catch (err) {
         console.error(err);
         state[id] = !newVal; // revert
+        setSyncStatus('offline');
         alert('Falha ao sincronizar o item. Verifique sua conexão.');
       } finally {
-        renderAll();
+        await refreshData();
       }
     }
 
     function subscribeRealtime() {
       channel = db.channel('checklist-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, async payload => {
-           await loadFromDB();
-           renderAll();
+           await refreshData();
         })
         .subscribe();
     }
@@ -1208,28 +1312,8 @@
         
         if(error) throw error;
         
-        state[item_id] = doneStatus;
-        
-        if (editingItemId) {
-          DATA.forEach(sec => {
-            const it = sec.items.find(i => i.id === editingItemId);
-            if(it) {
-              it.label = label;
-              it.assignee = assignee || null;
-              it.due_period = due_period || null;
-            }
-          });
-        } else {
-          const section = DATA.find(s => s.id === section_id);
-          if(section) {
-            section.items.push({ id: item_id, label, assignee: assignee || null, due_period: due_period || null, tag: 'novo' });
-          }
-        }
-        
         closeModal();
-        updateAssigneeFilters();
-        renderAll();
-        renderGeral();
+        await refreshData();
       } catch (err) {
         console.error(err);
         alert('Erro ao salvar tarefa: ' + err.message);
@@ -1247,13 +1331,7 @@
         
         if(error) throw error;
 
-        DATA.forEach(sec => {
-          sec.items = sec.items.filter(it => it.id !== id);
-        });
-        
-        updateAssigneeFilters();
-        renderAll();
-        renderGeral();
+        await refreshData();
       } catch (err) {
         console.error(err);
         alert('Erro ao remover: ' + err.message);
@@ -1401,9 +1479,7 @@
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
     (async () => {
-      await loadFromDB();
-      renderAll();
-      renderGeral(); // Added to render immediately on load
+      await refreshData();
       subscribeRealtime();
       document.getElementById('loadingOverlay').classList.add('hidden');
     })();
