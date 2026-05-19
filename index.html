@@ -1056,7 +1056,9 @@
               ${item.tip ? `<div class="item-tip">💡 ${item.tip}</div>` : ''}
             </div>
             ${item.tag ? `<span class="item-tag ${item.tag}">${item.tag === 'urgente' ? '🔴 urgente' : item.tag === 'novo' ? '🌿 sugestão' : item.tag}</span>` : ''}
-            
+            ${item.assignee ? `<span class="item-assignee ${item.assignee}">${item.assignee}</span>` : ''}
+            <div class="item-action item-edit" onclick="event.stopPropagation(); openModal('${item.id}')">✏️</div>
+            <div class="item-action item-delete" onclick="event.stopPropagation(); removeTask(event, '${item.id}')">🗑️</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -1094,7 +1096,7 @@
 
       const secSelect = document.getElementById('newTaskSection');
       if(secSelect) {
-        secSelect.innerHTML = DATA.map(s => `<option value="${s.id}" ${s.id === currentSectionId ? 'selected' : ''}>	ext{s.name}</option>`).join('');
+        secSelect.innerHTML = DATA.map(s => `<option value="${s.id}" ${s.id === currentSectionId ? 'selected' : ''}>${s.name}</option>`).join('');
         secSelect.disabled = !!editId; 
       }
       
@@ -1309,7 +1311,7 @@
           const pct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
           html += `
             <div class="dash-stat">
-              <span><strong>${a}</strong> <span style="color:#888; font-size:0.8rem">(${stats.done}/	ext{stats.total})</span></span>
+              <span><strong>${a}</strong> <span style="color:#888; font-size:0.8rem">(${stats.done}/${stats.total})</span></span>
               <span>${pct}%</span>
             </div>
             <div class="dash-bar-bg"><div class="dash-bar-fill" style="width: ${pct}%; background: var(--blue-medium)"></div></div>
