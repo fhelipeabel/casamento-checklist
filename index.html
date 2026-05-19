@@ -910,18 +910,26 @@
 
     async function toggleItem(id) {
       const el = document.getElementById('item-' + id);
-      el.classList.add('saving');
+      if(el) el.classList.add('saving');
       setSyncStatus('syncing');
 
       const newVal = !state[id];
       state[id] = newVal;
 
-      const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
-      if (error) { console.error(error); state[id] = !newVal; setSyncStatus('offline'); }
-      else { setSyncStatus('online'); }
-
-      el.classList.remove('saving');
-      renderAll();
+      try {
+        const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
+        if (error) throw error;
+        setSyncStatus('online');
+      } catch (err) {
+        console.error(err);
+        state[id] = !newVal;
+        setSyncStatus('offline');
+        alert('Falha ao sincronizar o item: ' + err.message);
+      } finally {
+        const currentEl = document.getElementById('item-' + id);
+        if (currentEl) currentEl.classList.remove('saving');
+        renderAll();
+      }
     }
 
     function subscribeRealtime() {
@@ -1079,81 +1087,81 @@
     }
 
     async function saveNewTask() {
-      const label = document.getElementById('newTaskLabel').value.trim();
-      const section_id = document.getElementById('newTaskSection').value;
-      let assignee = document.getElementById('newTaskAssigneeType').value;
-      
-      if(assignee === 'new') {
-        assignee = document.getElementById('newAssigneeName').value.trim();
-        if(!assignee) return alert('Preencha o nome do novo responsável!');
-      }
-      
-      if(!label) return alert('Preencha a tarefa!');
-
-      const item_id = editingItemId || ('custom_' + Date.now());
-      setSyncStatus('syncing');
-      
-      const doneStatus = editingItemId ? !!state[item_id] : false;
-
-      const { error } = await db.from('checklist').upsert({
-        item_id, done: doneStatus, label, section_id, assignee, deleted: false
-      });
-      
-      if(error) {
-        console.error(error);
-        alert('Erro ao salvar no banco. Verifique se você atualizou a tabela no Supabase!');
-        setSyncStatus('offline');
-        return;
-      }
-      
-      state[item_id] = doneStatus;
-      
-      if (editingItemId) {
-        DATA.forEach(sec => {
-          const it = sec.items.find(i => i.id === editingItemId);
-          if(it) {
-            it.label = label;
-            it.assignee = assignee;
-          }
-        });
-      } else {
-        const section = DATA.find(s => s.id === section_id);
-        if(section) {
-          section.items.push({ id: item_id, label, assignee, tag: 'novo' });
+      try {
+        const label = document.getElementById('newTaskLabel').value.trim();
+        const section_id = document.getElementById('newTaskSection').value;
+        let assignee = document.getElementById('newTaskAssigneeType').value;
+        
+        if(assignee === 'new') {
+          assignee = document.getElementById('newAssigneeName').value.trim();
+          if(!assignee) return alert('Preencha o nome do novo responsável!');
         }
+        
+        if(!label) return alert('Preencha a tarefa!');
+
+        const item_id = editingItemId || ('custom_' + Date.now());
+        setSyncStatus('syncing');
+        
+        const doneStatus = editingItemId ? !!state[item_id] : false;
+
+        const { error } = await db.from('checklist').upsert({
+          item_id, done: doneStatus, label, section_id, assignee, deleted: false
+        });
+        
+        if(error) throw error;
+        
+        state[item_id] = doneStatus;
+        
+        if (editingItemId) {
+          DATA.forEach(sec => {
+            const it = sec.items.find(i => i.id === editingItemId);
+            if(it) {
+              it.label = label;
+              it.assignee = assignee;
+            }
+          });
+        } else {
+          const section = DATA.find(s => s.id === section_id);
+          if(section) {
+            section.items.push({ id: item_id, label, assignee, tag: 'novo' });
+          }
+        }
+        
+        closeModal();
+        updateAssigneeFilters();
+        renderAll();
+        setSyncStatus('online');
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar tarefa: ' + err.message + '. Você rodou o comando SQL no Supabase?');
+        setSyncStatus('offline');
       }
-      
-      closeModal();
-      updateAssigneeFilters();
-      renderAll();
-      setSyncStatus('online');
     }
 
     async function removeTask(e, id) {
       e.stopPropagation();
       if(!confirm('Tem certeza que deseja remover esta tarefa?')) return;
       
-      setSyncStatus('syncing');
-      // Marca como deletado no banco
-      const { error } = await db.from('checklist').upsert({
-        item_id: id, deleted: true
-      });
-      
-      if(error) {
-        console.error(error);
-        alert('Erro ao remover no banco. Verifique se você atualizou a tabela no Supabase!');
-        setSyncStatus('offline');
-        return;
-      }
+      try {
+        setSyncStatus('syncing');
+        const { error } = await db.from('checklist').upsert({
+          item_id: id, deleted: true
+        });
+        
+        if(error) throw error;
 
-      // Remove do DATA local
-      DATA.forEach(sec => {
-        sec.items = sec.items.filter(it => it.id !== id);
-      });
-      
-      updateAssigneeFilters();
-      renderAll();
-      setSyncStatus('online');
+        DATA.forEach(sec => {
+          sec.items = sec.items.filter(it => it.id !== id);
+        });
+        
+        updateAssigneeFilters();
+        renderAll();
+        setSyncStatus('online');
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao remover: ' + err.message);
+        setSyncStatus('offline');
+      }
     }
 
     // ─── INIT ────────────────────────────────────────────────────────────────────
