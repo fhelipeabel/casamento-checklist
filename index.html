@@ -628,6 +628,79 @@
       transition: width 0.5s ease;
     }
 
+  
+    /* FAB (Floating Action Button) */
+    .fab-add {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--navy);
+      color: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(24, 40, 62, 0.3);
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s;
+    }
+    .fab-add:hover { transform: scale(1.08); }
+
+    /* Delete and Edit buttons on items */
+    .item-action {
+      opacity: 0;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      transition: opacity 0.2s;
+      margin-left: 8px;
+    }
+    .item-delete { color: #c17b6e; }
+    .item-edit { color: var(--blue-medium); }
+    .item:hover .item-action { opacity: 1; }
+    @media (max-width: 520px) { .item-action { opacity: 1; } }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(24, 40, 62, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      padding: 20px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: var(--cream);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+    .modal-overlay.open .modal-content { transform: translateY(0); }
+    .modal-header { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 20px; font-weight: 600; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--blue-medium); margin-bottom: 6px; font-weight: 500; }
+    .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; color: var(--navy); background: white; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    .btn { padding: 10px 18px; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-cancel { background: transparent; color: var(--blue-medium); }
+    .btn-cancel:hover { background: #e0e6ed; }
+    .btn-save { background: var(--navy); color: var(--cream); }
+    .btn-save:hover { background: var(--blue-medium); }
+
   </style>
 </head>
 
@@ -679,6 +752,8 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtenlzc3BmaGVuZm1rbWdla3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjg1NzIsImV4cCI6MjA5NDc0NDU3Mn0.9LvEFat_mNibMLWVzfy0a-BGtnr6lU3VZsmh7kAOnYA';
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+    let originalDataStr = null;
+    let editingItemId = null;
     // ─────────────────────────────────────────────────────────────────────────────
 
     const DATA = [
@@ -994,6 +1069,140 @@
     }
 
 // --- FUNÇÕES DINÂMICAS E FILTROS ---
+
+    function openModal(editId = null) {
+      editingItemId = editId;
+      const modalHeader = document.querySelector('.modal-header');
+      if(modalHeader) modalHeader.textContent = editId ? 'Editar Tarefa' : 'Nova Tarefa';
+
+      let currentLabel = '';
+      let currentAssignee = '';
+      let currentSectionId = '';
+
+      if (editId) {
+        DATA.forEach(s => {
+          const it = s.items.find(i => i.id === editId);
+          if (it) {
+            currentLabel = it.label;
+            currentAssignee = it.assignee || '';
+            currentSectionId = s.id;
+          }
+        });
+      }
+
+      const secSelect = document.getElementById('newTaskSection');
+      if(secSelect) {
+        secSelect.innerHTML = DATA.map(s => `<option value="${s.id}" ${s.id === currentSectionId ? 'selected' : ''}>${s.name}</option>`).join('');
+        secSelect.disabled = !!editId; 
+      }
+      
+      const assignees = new Set();
+      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
+      
+      const assSelect = document.getElementById('newTaskAssigneeType');
+      if(assSelect) {
+        let options = Array.from(assignees).map(a => `<option value="${a}" ${a === currentAssignee ? 'selected' : ''}>${a}</option>`).join('');
+        options += '<option value="new">+ Adicionar novo...</option>';
+        if (editId && currentAssignee && !assignees.has(currentAssignee)) {
+          options = `<option value="${currentAssignee}" selected>${currentAssignee}</option>` + options;
+        }
+        assSelect.innerHTML = options;
+      }
+      
+      const labelInput = document.getElementById('newTaskLabel');
+      if(labelInput) labelInput.value = currentLabel;
+      
+      const newAssInput = document.getElementById('newAssigneeName');
+      if(newAssInput) newAssInput.value = '';
+      
+      toggleNewAssigneeInput();
+      
+      document.getElementById('taskModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.remove('open');
+    }
+
+    function toggleNewAssigneeInput() {
+      const val = document.getElementById('newTaskAssigneeType').value;
+      document.getElementById('newAssigneeWrapper').style.display = val === 'new' ? 'block' : 'none';
+    }
+
+    async function saveNewTask() {
+      try {
+        const label = document.getElementById('newTaskLabel').value.trim();
+        const section_id = document.getElementById('newTaskSection').value;
+        let assignee = document.getElementById('newTaskAssigneeType').value;
+        
+        if(assignee === 'new') {
+          assignee = document.getElementById('newAssigneeName').value.trim();
+          if(!assignee) return alert('Preencha o nome do novo responsável!');
+        }
+        
+        if(!label) return alert('Preencha a tarefa!');
+
+        const item_id = editingItemId || ('custom_' + Date.now());
+        
+        const doneStatus = editingItemId ? !!state[item_id] : false;
+
+        const { error } = await db.from('checklist').upsert({
+          item_id, done: doneStatus, label, section_id, assignee, deleted: false
+        });
+        
+        if(error) throw error;
+        
+        state[item_id] = doneStatus;
+        
+        if (editingItemId) {
+          DATA.forEach(sec => {
+            const it = sec.items.find(i => i.id === editingItemId);
+            if(it) {
+              it.label = label;
+              it.assignee = assignee;
+            }
+          });
+        } else {
+          const section = DATA.find(s => s.id === section_id);
+          if(section) {
+            section.items.push({ id: item_id, label, assignee, tag: 'novo' });
+          }
+        }
+        
+        closeModal();
+        updateAssigneeFilters();
+        renderAll();
+        renderGeral();
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar tarefa: ' + err.message + '\n(Dica: As colunas novas existem no Supabase?)');
+      }
+    }
+
+    async function removeTask(e, id) {
+      e.stopPropagation();
+      if(!confirm('Tem certeza que deseja remover esta tarefa?')) return;
+      
+      try {
+        const { error } = await db.from('checklist').upsert({
+          item_id: id, deleted: true
+        });
+        
+        if(error) throw error;
+
+        DATA.forEach(sec => {
+          sec.items = sec.items.filter(it => it.id !== id);
+        });
+        
+        updateAssigneeFilters();
+        renderAll();
+        renderGeral();
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao remover: ' + err.message);
+      }
+    }
+
     function updateAssigneeFilters() {
       const container = document.getElementById('assigneeFilters');
       if(!container) return;
@@ -1131,6 +1340,44 @@
   <div id="view-geral" style="display: block;">
     <div class="dashboard" id="dashboardContent">
       <!-- Injetado via JS -->
+    </div>
+  </div>
+
+
+  <div class="fab-add" onclick="openModal()">+</div>
+
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal-content">
+      <div class="modal-header">Nova Tarefa</div>
+      
+      <div class="form-group">
+        <label>O que precisa ser feito?</label>
+        <input type="text" id="newTaskLabel" placeholder="Ex: Comprar lembrancinhas">
+      </div>
+
+      <div class="form-group">
+        <label>Em qual etapa?</label>
+        <select id="newTaskSection">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Quem será o responsável?</label>
+        <select id="newTaskAssigneeType" onchange="toggleNewAssigneeInput()">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+
+      <div class="form-group" id="newAssigneeWrapper" style="display: none;">
+        <label>Nome do novo responsável</label>
+        <input type="text" id="newAssigneeName" placeholder="Digite o nome">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-save" onclick="saveNewTask()">Adicionar</button>
+      </div>
     </div>
   </div>
 
