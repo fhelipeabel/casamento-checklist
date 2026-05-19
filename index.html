@@ -563,6 +563,71 @@
     }
     .btn-save:hover { background: var(--blue-medium); }
 
+  
+    .main-tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .main-tab {
+      flex: 1;
+      text-align: center;
+      padding: 16px 0;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--blue-medium);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .main-tab.active {
+      color: var(--navy);
+      border-bottom-color: var(--navy);
+    }
+    
+    .dashboard {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .dash-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .dash-card h3 {
+      font-family: 'Playfair Display', serif;
+      color: var(--navy);
+      margin-bottom: 16px;
+      font-size: 1.3rem;
+    }
+    .dash-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+    .dash-bar-bg {
+      height: 8px;
+      background: var(--light);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .dash-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--sage));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
   </style>
 </head>
 
@@ -582,6 +647,13 @@
     </div>
     <div class="progress-label" id="globalLabel">carregando…</div>
   </header>
+  <div class="main-tabs">
+    <div class="main-tab active" onclick="switchTab('checklist')">Checklist</div>
+    <div class="main-tab" onclick="switchTab('geral')">Visão Geral</div>
+  </div>
+
+  <div id="view-checklist">
+
 
   <div class="search-wrap"><input type="text" id="searchInput" placeholder="🔍  Buscar tarefa…" oninput="filterItems()">
   </div>
@@ -935,6 +1007,98 @@
       container.innerHTML = html;
     }
 
+
+    // --- VISÃO GERAL ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      if(tabId === 'checklist') {
+        document.getElementById('view-checklist').style.display = 'block';
+        document.getElementById('view-geral').style.display = 'none';
+      } else {
+        document.getElementById('view-checklist').style.display = 'none';
+        document.getElementById('view-geral').style.display = 'block';
+        renderGeral();
+      }
+    }
+
+    function renderGeral() {
+      const container = document.getElementById('dashboardContent');
+      let totalItems = 0;
+      let totalDone = 0;
+      
+      const assignees = {};
+      const sectionsStats = [];
+
+      DATA.forEach(section => {
+        let secTotal = section.items.length;
+        let secDone = 0;
+        
+        section.items.forEach(it => {
+          totalItems++;
+          const isDone = !!state[it.id];
+          if(isDone) {
+            totalDone++;
+            secDone++;
+          }
+          
+          if(it.assignee) {
+            if(!assignees[it.assignee]) assignees[it.assignee] = { total: 0, done: 0 };
+            assignees[it.assignee].total++;
+            if(isDone) assignees[it.assignee].done++;
+          }
+        });
+        
+        sectionsStats.push({ name: section.name, icon: section.icon, total: secTotal, done: secDone });
+      });
+
+      const pctGlobal = totalItems ? Math.round((totalDone / totalItems) * 100) : 0;
+
+      let html = `
+        <div class="dash-card">
+          <h3>Progresso Total</h3>
+          <div style="font-size: 2.5rem; color: var(--navy); font-weight: 300; text-align: center; margin: 10px 0;">${pctGlobal}%</div>
+          <div style="text-align: center; color: var(--blue-medium); font-size: 0.9rem;">${totalDone} de ${totalItems} tarefas concluídas</div>
+          <div class="dash-bar-bg" style="margin-top: 16px; height: 12px;"><div class="dash-bar-fill" style="width: ${pctGlobal}%"></div></div>
+        </div>
+      `;
+
+      if(Object.keys(assignees).length > 0) {
+        html += `<div class="dash-card"><h3>Por Responsável</h3>`;
+        for(let a in assignees) {
+          const stats = assignees[a];
+          const pct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+          html += `
+            <div class="dash-stat">
+              <span><strong>${a}</strong> <span style="color:#888; font-size:0.8rem">(${stats.done}/${stats.total})</span></span>
+              <span>${pct}%</span>
+            </div>
+            <div class="dash-bar-bg"><div class="dash-bar-fill" style="width: ${pct}%; background: var(--blue-medium)"></div></div>
+            <br>
+          `;
+        }
+        html += `</div>`;
+      }
+
+      html += `<div class="dash-card"><h3>Por Etapa</h3>`;
+      sectionsStats.forEach(s => {
+        const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+        html += `
+          <div class="dash-stat">
+            <span>${s.icon} ${s.name}</span>
+            <span>${s.done}/${s.total} (${pct}%)</span>
+          </div>
+          <div class="dash-bar-bg"><div class="dash-bar-fill" style="width: ${pct}%; background: var(--serenity)"></div></div>
+          <br>
+        `;
+      });
+      html += `</div>`;
+
+      container.innerHTML = html;
+    }
+
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
     (async () => {
       await loadFromDB();
@@ -943,6 +1107,15 @@
       document.getElementById('loadingOverlay').classList.add('hidden');
     })();
   </script>
+
+  </div>
+
+  <div id="view-geral" style="display: none;">
+    <div class="dashboard" id="dashboardContent">
+      <!-- Injetado via JS -->
+    </div>
+  </div>
+
 </body>
 
 </html>
