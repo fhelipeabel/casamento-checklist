@@ -648,11 +648,11 @@
     <div class="progress-label" id="globalLabel">carregando…</div>
   </header>
   <div class="main-tabs">
-    <div class="main-tab" onclick="switchTab('geral')">Visão Geral</div>
-    <div class="main-tab active" onclick="switchTab('checklist')">Checklist</div>
+    <div class="main-tab active" onclick="switchTab('geral')">Visão Geral</div>
+    <div class="main-tab" onclick="switchTab('checklist')">Checklist</div>
   </div>
 
-  <div id="view-checklist">
+  <div id="view-checklist" style="display: none;">
 
 
   <div class="search-wrap"><input type="text" id="searchInput" placeholder="🔍  Buscar tarefa…" oninput="filterItems()">
@@ -1103,6 +1103,7 @@
     (async () => {
       await loadFromDB();
       renderAll();
+      renderGeral(); // Added to render immediately on load
       subscribeRealtime();
       document.getElementById('loadingOverlay').classList.add('hidden');
     })();
@@ -1110,7 +1111,7 @@
 
   </div>
 
-  <div id="view-geral" style="display: none;">
+  <div id="view-geral" style="display: block;">
     <div class="dashboard" id="dashboardContent">
       <!-- Injetado via JS -->
     </div>
