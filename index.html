@@ -1055,7 +1055,24 @@
 
       const pctGlobal = totalItems ? Math.round((totalDone / totalItems) * 100) : 0;
 
+      // Calculando tempo restante
+      const weddingDate = new Date('2026-07-25T09:00:00-03:00');
+      const now = new Date();
+      const diff = weddingDate - now;
+      
+      let countdownStr = "Chegou o grande dia!";
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        countdownStr = `Faltam <strong>${days} dias</strong> e <strong>${hours} horas</strong>`;
+      }
+
       let html = `
+        <div class="dash-card" style="text-align: center; background: linear-gradient(135deg, var(--serenity), var(--light));">
+          <h3 style="margin-bottom: 8px;">O Grande Dia 💍</h3>
+          <div style="font-size: 1rem; color: var(--navy); opacity: 0.8;">25 de Julho de 2026, às 09:00</div>
+          <div style="font-size: 1.5rem; color: var(--navy); font-weight: 500; margin-top: 12px;">${countdownStr}</div>
+        </div>
         <div class="dash-card">
           <h3>Progresso Total</h3>
           <div style="font-size: 2.5rem; color: var(--navy); font-weight: 300; text-align: center; margin: 10px 0;">${pctGlobal}%</div>
