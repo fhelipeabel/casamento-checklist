@@ -477,43 +477,10 @@
     .item-assignee.Helena { background: #e2d0f2; color: #4a1e6d; }
 
   
-    /* FAB (Floating Action Button) para adicionar tarefa */
-    .fab-add {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 56px;
-      height: 56px;
-      background: var(--navy);
-      color: var(--cream);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 4px 12px rgba(24, 40, 62, 0.3);
-      cursor: pointer;
-      z-index: 100;
-      transition: transform 0.2s;
-    }
-    .fab-add:hover { transform: scale(1.08); }
+    
 
     /* Delete and Edit buttons on items */
-    .item-action {
-      opacity: 0;
-      cursor: pointer;
-      font-size: 1.1rem;
-      padding: 4px;
-      transition: opacity 0.2s;
-      margin-left: 8px;
-    }
-    .item-delete { color: #c17b6e; }
-    .item-edit { color: var(--blue-medium); }
-    .item:hover .item-action { opacity: 1; }
     
-    @media (max-width: 520px) {
-      .item-action { opacity: 1; }
-    }
 
     /* Modal Styles */
     .modal-overlay {
@@ -629,34 +596,9 @@
   <div class="empty-search" id="emptyMsg">Nenhuma tarefa encontrada 🌸</div>
 
   
-  <div class="fab-add" onclick="openModal()">+</div>
+  
 
-  <div class="modal-overlay" id="taskModal">
-    <div class="modal-content">
-      <div class="modal-header">Nova Tarefa</div>
-      <div class="form-group">
-        <label>O que precisa ser feito?</label>
-        <input type="text" id="newTaskLabel" placeholder="Ex: Prova do vestido">
-      </div>
-      <div class="form-group">
-        <label>Em qual categoria?</label>
-        <select id="newTaskSection"></select>
-      </div>
-      <div class="form-group">
-        <label>Quem será o responsável?</label>
-        <select id="newTaskAssigneeType" onchange="toggleNewAssigneeInput()">
-          <!-- Preenchido via JS -->
-        </select>
-      </div>
-      <div class="form-group" id="newAssigneeWrapper" style="display:none;">
-        <label>Nome do novo responsável</label>
-        <input type="text" id="newAssigneeName" placeholder="Ex: Cerimonialista">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-save" onclick="saveNewTask()">Adicionar</button>
-      </div>
-    </div>
+  
   </div>
 
   <script>
@@ -862,44 +804,13 @@
       const { data, error } = await db.from('checklist').select('*');
       if (error) { console.error(error); return; }
       state = {};
-      
-      // Restaura DATA para o original antes de aplicar modificações do banco
-      // Para evitar duplicação se a função rodar 2 vezes
-      DATA.length = 0;
-      JSON.parse(originalDataStr).forEach(s => DATA.push(s));
-      
       data.forEach(row => { 
         state[row.item_id] = row.done; 
-        
-        if (row.deleted) {
-           // Remove tarefa se deletada
-           DATA.forEach(sec => {
-             sec.items = sec.items.filter(it => it.id !== row.item_id);
-           });
-        } else {
-           let existingItem = null;
-           DATA.forEach(s => {
-               const it = s.items.find(i => i.id === row.item_id);
-               if(it) existingItem = it;
-           });
-
-           if (existingItem) {
-               if (row.label) existingItem.label = row.label;
-               if (row.assignee) existingItem.assignee = row.assignee;
-           } else if (row.label && row.section_id) {
-               const sec = DATA.find(s => s.id === row.section_id);
-               if (sec) {
-                  sec.items.push({
-                    id: row.item_id, label: row.label, assignee: row.assignee, tag: 'novo'
-                  });
-               }
-           }
-        }
       });
       
       updateAssigneeFilters();
 
-      // Seed initial done items se banco vazio e tem done nativo
+      // Seed initial done items se banco vazio
       const allItems = DATA.flatMap(s => s.items);
       const seedItems = allItems.filter(it => it.done && state[it.id] === undefined);
       if (seedItems.length > 0) {
@@ -911,7 +822,6 @@
     async function toggleItem(id) {
       const el = document.getElementById('item-' + id);
       if(el) el.classList.add('saving');
-      
 
       const newVal = !state[id];
       state[id] = newVal;
@@ -919,15 +829,11 @@
       try {
         const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
         if (error) throw error;
-        
       } catch (err) {
         console.error(err);
-        state[id] = !newVal;
-        
-        alert('Falha ao sincronizar o item: ' + err.message);
+        state[id] = !newVal; // revert
+        alert('Falha ao sincronizar o item. Verifique sua conexão.');
       } finally {
-        const currentEl = document.getElementById('item-' + id);
-        if (currentEl) currentEl.classList.remove('saving');
         renderAll();
       }
     }
@@ -935,7 +841,6 @@
     function subscribeRealtime() {
       channel = db.channel('checklist-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, async payload => {
-           // Reload everything simply to ensure custom items and deletions sync seamlessly
            await loadFromDB();
            renderAll();
         })
@@ -1003,8 +908,6 @@
             </div>
             ${item.tag ? `<span class="item-tag ${item.tag}">${item.tag === 'urgente' ? '🔴 urgente' : item.tag === 'novo' ? '🌿 sugestão' : item.tag}</span>` : ''}
             ${item.assignee ? `<span class="item-assignee" style="background: var(--light); color: var(--navy);">${item.assignee}</span>` : ''}
-   <div class="item-action item-edit" onclick="event.stopPropagation(); openModal('${item.id}')">✏️</div>
-   <div class="item-action item-delete" onclick="event.stopPropagation(); removeTask(event, '${item.id}')">🗑️</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -1018,13 +921,10 @@
       filterItems();
     }
 
-    
-    // --- FUNÇÕES CRUD E DINÂMICAS ---
-    let originalDataStr = JSON.stringify(DATA); // guarda o estado original
-    let editingItemId = null;
-    
+// --- FUNÇÕES DINÂMICAS E FILTROS ---
     function updateAssigneeFilters() {
       const container = document.getElementById('assigneeFilters');
+      if(!container) return;
       const assignees = new Set();
       DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
       
@@ -1035,136 +935,7 @@
       container.innerHTML = html;
     }
 
-    function openModal(editId = null) {
-      editingItemId = editId;
-      const modalHeader = document.querySelector('.modal-header');
-      modalHeader.textContent = editId ? 'Editar Tarefa' : 'Nova Tarefa';
-
-      let currentLabel = '';
-      let currentAssignee = '';
-      let currentSectionId = '';
-
-      if (editId) {
-        DATA.forEach(s => {
-          const it = s.items.find(i => i.id === editId);
-          if (it) {
-            currentLabel = it.label;
-            currentAssignee = it.assignee || '';
-            currentSectionId = s.id;
-          }
-        });
-      }
-
-      const secSelect = document.getElementById('newTaskSection');
-      secSelect.innerHTML = DATA.map(s => `<option value="${s.id}" ${s.id === currentSectionId ? 'selected' : ''}>${s.name}</option>`).join('');
-      secSelect.disabled = !!editId; 
-      
-      const assignees = new Set();
-      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
-      
-      const assSelect = document.getElementById('newTaskAssigneeType');
-      let options = Array.from(assignees).map(a => `<option value="${a}" ${a === currentAssignee ? 'selected' : ''}>${a}</option>`).join('');
-      options += '<option value="new">+ Adicionar novo...</option>';
-      if (editId && currentAssignee && !assignees.has(currentAssignee)) {
-        options = `<option value="${currentAssignee}" selected>${currentAssignee}</option>` + options;
-      }
-      assSelect.innerHTML = options;
-      
-      document.getElementById('newTaskLabel').value = currentLabel;
-      document.getElementById('newAssigneeName').value = '';
-      toggleNewAssigneeInput();
-      
-      document.getElementById('taskModal').classList.add('open');
-    }
-
-    function closeModal() {
-      document.getElementById('taskModal').classList.remove('open');
-    }
-
-    function toggleNewAssigneeInput() {
-      const val = document.getElementById('newTaskAssigneeType').value;
-      document.getElementById('newAssigneeWrapper').style.display = val === 'new' ? 'block' : 'none';
-    }
-
-    async function saveNewTask() {
-      try {
-        const label = document.getElementById('newTaskLabel').value.trim();
-        const section_id = document.getElementById('newTaskSection').value;
-        let assignee = document.getElementById('newTaskAssigneeType').value;
-        
-        if(assignee === 'new') {
-          assignee = document.getElementById('newAssigneeName').value.trim();
-          if(!assignee) return alert('Preencha o nome do novo responsável!');
-        }
-        
-        if(!label) return alert('Preencha a tarefa!');
-
-        const item_id = editingItemId || ('custom_' + Date.now());
-        
-        
-        const doneStatus = editingItemId ? !!state[item_id] : false;
-
-        const { error } = await db.from('checklist').upsert({
-          item_id, done: doneStatus, label, section_id, assignee, deleted: false
-        });
-        
-        if(error) throw error;
-        
-        state[item_id] = doneStatus;
-        
-        if (editingItemId) {
-          DATA.forEach(sec => {
-            const it = sec.items.find(i => i.id === editingItemId);
-            if(it) {
-              it.label = label;
-              it.assignee = assignee;
-            }
-          });
-        } else {
-          const section = DATA.find(s => s.id === section_id);
-          if(section) {
-            section.items.push({ id: item_id, label, assignee, tag: 'novo' });
-          }
-        }
-        
-        closeModal();
-        updateAssigneeFilters();
-        renderAll();
-        
-      } catch (err) {
-        console.error(err);
-        alert('Erro ao salvar tarefa: ' + err.message + '. Você rodou o comando SQL no Supabase?');
-        
-      }
-    }
-
-    async function removeTask(e, id) {
-      e.stopPropagation();
-      if(!confirm('Tem certeza que deseja remover esta tarefa?')) return;
-      
-      try {
-        
-        const { error } = await db.from('checklist').upsert({
-          item_id: id, deleted: true
-        });
-        
-        if(error) throw error;
-
-        DATA.forEach(sec => {
-          sec.items = sec.items.filter(it => it.id !== id);
-        });
-        
-        updateAssigneeFilters();
-        renderAll();
-        
-      } catch (err) {
-        console.error(err);
-        alert('Erro ao remover: ' + err.message);
-        
-      }
-    }
-
-    // ─── INIT ────────────────────────────────────────────────────────────────────
+// ─── INIT ────────────────────────────────────────────────────────────────────
     (async () => {
       await loadFromDB();
       renderAll();
