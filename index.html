@@ -911,7 +911,7 @@
     async function toggleItem(id) {
       const el = document.getElementById('item-' + id);
       if(el) el.classList.add('saving');
-      setSyncStatus('syncing');
+      
 
       const newVal = !state[id];
       state[id] = newVal;
@@ -919,11 +919,11 @@
       try {
         const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
         if (error) throw error;
-        setSyncStatus('online');
+        
       } catch (err) {
         console.error(err);
         state[id] = !newVal;
-        setSyncStatus('offline');
+        
         alert('Falha ao sincronizar o item: ' + err.message);
       } finally {
         const currentEl = document.getElementById('item-' + id);
@@ -1100,7 +1100,7 @@
         if(!label) return alert('Preencha a tarefa!');
 
         const item_id = editingItemId || ('custom_' + Date.now());
-        setSyncStatus('syncing');
+        
         
         const doneStatus = editingItemId ? !!state[item_id] : false;
 
@@ -1130,11 +1130,11 @@
         closeModal();
         updateAssigneeFilters();
         renderAll();
-        setSyncStatus('online');
+        
       } catch (err) {
         console.error(err);
         alert('Erro ao salvar tarefa: ' + err.message + '. Você rodou o comando SQL no Supabase?');
-        setSyncStatus('offline');
+        
       }
     }
 
@@ -1143,7 +1143,7 @@
       if(!confirm('Tem certeza que deseja remover esta tarefa?')) return;
       
       try {
-        setSyncStatus('syncing');
+        
         const { error } = await db.from('checklist').upsert({
           item_id: id, deleted: true
         });
@@ -1156,11 +1156,11 @@
         
         updateAssigneeFilters();
         renderAll();
-        setSyncStatus('online');
+        
       } catch (err) {
         console.error(err);
         alert('Erro ao remover: ' + err.message);
-        setSyncStatus('offline');
+        
       }
     }
 
