@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checklist do Casamento 💍</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --cream: #faf6f0;
+      --blush: #e8c4b8;
+      --rose: #c17b6e;
+      --deep: #3d2b2b;
+      --gold: #c9a96e;
+      --sage: #8a9e8a;
+      --done: #6b9b7a;
+      --light: #f4ede4;
+      --border: #ddd0c4;
+      --shadow: rgba(61, 43, 43, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--cream);
+      color: var(--deep);
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
+
+    header {
+      background: var(--deep);
+      padding: 48px 32px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 0%, rgba(201, 169, 110, 0.18) 0%, transparent 70%), radial-gradient(ellipse at 20% 100%, rgba(232, 196, 184, 0.12) 0%, transparent 60%);
+    }
+
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 300;
+      color: var(--cream);
+      letter-spacing: 0.04em;
+      position: relative;
+    }
+
+    header h1 em {
+      color: var(--gold);
+      font-style: italic;
+    }
+
+    header p {
+      color: var(--blush);
+      font-size: 0.85rem;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 8px;
+      position: relative;
+    }
+
+    .sync-status {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .sync-status.online {
+      background: rgba(107, 155, 122, 0.25);
+      color: #a8d8b8;
+    }
+
+    .sync-status.syncing {
+      background: rgba(201, 169, 110, 0.25);
+      color: var(--gold);
+    }
+
+    .sync-status.offline {
+      background: rgba(193, 123, 110, 0.25);
+      color: var(--blush);
+    }
+
+    .progress-bar-wrap {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 99px;
+      height: 6px;
+      max-width: 360px;
+      margin: 20px auto 0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--blush));
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .progress-label {
+      color: var(--gold);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .search-wrap {
+      max-width: 780px;
+      margin: 28px auto 0;
+      padding: 0 20px;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 12px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.92rem;
+      color: var(--deep);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--gold);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 780px;
+      margin: 14px auto 0;
+      padding: 0 20px;
+    }
+
+    .filter-btn {
+      padding: 6px 16px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: white;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--deep);
+      cursor: pointer;
+      transition: all 0.18s;
+      letter-spacing: 0.04em;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--gold);
+      color: var(--rose);
+    }
+
+    .filter-btn.active {
+      background: var(--deep);
+      color: var(--cream);
+      border-color: var(--deep);
+    }
+
+    .sections {
+      max-width: 780px;
+      margin: 32px auto 0;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 16px var(--shadow);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .section:hover {
+      box-shadow: 0 4px 28px rgba(61, 43, 43, 0.13);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 16px;
+      cursor: pointer;
+      user-select: none;
+      gap: 12px;
+      border-bottom: 1.5px solid var(--light);
+    }
+
+    .section-header:hover {
+      background: var(--light);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .section-icon {
+      font-size: 1.3rem;
+    }
+
+    .section-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.22rem;
+      font-weight: 600;
+      color: var(--deep);
+    }
+
+    .section-count {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--rose);
+      background: var(--light);
+      padding: 3px 10px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .section-count.complete {
+      color: var(--done);
+      background: #eaf4ec;
+    }
+
+    .chevron {
+      color: var(--border);
+      font-size: 1rem;
+      transition: transform 0.25s;
+      flex-shrink: 0;
+    }
+
+    .section.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .items-list {
+      display: none;
+      padding: 6px 0 10px;
+      flex-direction: column;
+    }
+
+    .section.open .items-list {
+      display: flex;
+    }
+
+    .item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .item:hover {
+      background: var(--cream);
+    }
+
+    .item.done {
+      opacity: 0.6;
+    }
+
+    .item.done .item-label {
+      text-decoration: line-through;
+      color: var(--sage);
+    }
+
+    .item.hidden {
+      display: none;
+    }
+
+    .item.saving {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .item-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s;
+      background: white;
+    }
+
+    .item.done .item-check {
+      background: var(--done);
+      border-color: var(--done);
+    }
+
+    .item.done .item-check::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .item-text {
+      flex: 1;
+    }
+
+    .item-label {
+      font-size: 0.91rem;
+      font-weight: 400;
+      color: var(--deep);
+      line-height: 1.4;
+    }
+
+    .item-tip {
+      font-size: 0.78rem;
+      color: var(--sage);
+      margin-top: 3px;
+      font-style: italic;
+      font-family: 'Cormorant Garamond', serif;
+      line-height: 1.4;
+    }
+
+    .item-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--rose);
+      background: #fdf0ec;
+      border-radius: 99px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      align-self: center;
+      flex-shrink: 0;
+    }
+
+    .item-tag.urgente {
+      background: #fdecea;
+      color: #c0392b;
+    }
+
+    .item-tag.novo {
+      background: #eaf4ec;
+      color: var(--done);
+    }
+
+    .section-progress {
+      height: 3px;
+      background: var(--light);
+    }
+
+    .section-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--sage));
+      transition: width 0.4s ease;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--cream);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 999;
+      transition: opacity 0.4s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-ring {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      color: var(--rose);
+      font-style: italic;
+    }
+
+    .empty-search {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--sage);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-style: italic;
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      header {
+        padding: 36px 20px 28px;
+      }
+
+      .sections,
+      .search-wrap,
+      .filter-row {
+        padding: 0 12px;
+      }
+
+      .item {
+        padding: 10px 14px;
+      }
+
+      .section-header {
+        padding: 16px 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-ring"></div>
+    <div class="loading-text">Carregando seu checklist…</div>
+  </div>
+
+  <header>
+    <span class="sync-status online" id="syncStatus">● sincronizado</span>
+    <h1>Checklist do <em>Casamento</em> 💍</h1>
+    <p>Seu guia completo até o grande dia</p>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="globalBar" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="globalLabel">carregando…</div>
+  </header>
+
+  <div class="search-wrap"><input type="text" id="searchInput" placeholder="🔍  Buscar tarefa…" oninput="filterItems()">
+  </div>
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all',this)">Todas</button>
+    <button class="filter-btn" onclick="setFilter('pending',this)">Pendentes</button>
+    <button class="filter-btn" onclick="setFilter('done',this)">Concluídas</button>
+  </div>
+
+  <div class="sections" id="sections"></div>
+  <div class="empty-search" id="emptyMsg">Nenhuma tarefa encontrada 🌸</div>
+
+  <script>
+    // ─── CONFIGURAÇÃO SUPABASE ───────────────────────────────────────────────────
+    const SUPABASE_URL = 'https://dmzysspfhenfmkmgekyi.supabase.co/rest/v1/';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtenlzc3BmaGVuZm1rbWdla3lpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjg1NzIsImV4cCI6MjA5NDc0NDU3Mn0.9LvEFat_mNibMLWVzfy0a-BGtnr6lU3VZsmh7kAOnYA';
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    const DATA = [
+      {
+        id: 'geral', icon: '📋', name: 'Geral', items: [
+          { id: 'g1', label: 'Definição da data', done: true },
+          { id: 'g2', label: 'Lista de convidados', done: true },
+          { id: 'g3', label: 'Escolha de padrinhos', done: true },
+          { id: 'g4', label: 'Convites personalizados para padrinhos', done: true },
+          { id: 'g5', label: 'Escolha de damas e pagens', done: true },
+          { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.' },
+          { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker' },
+          { id: 'g8', label: 'Ensaio de fotos (pré-wedding)' },
+          { id: 'g9', label: 'Levar fotos retrospectiva para o fotógrafo' },
+          { id: 'g10', label: 'Entrevista dos noivos', tip: 'Confirmar data/hora com o fotógrafo ou videomaker.' },
+          { id: 'g11', label: 'Passar localização do dia da noiva para o fotógrafo' },
+          { id: 'g12', label: 'Confirmar cronograma com pais e padrinhos', tag: 'urgente' },
+        ]
+      },
+      {
+        id: 'fotos', icon: '📸', name: 'Foto & Álbum', items: [
+          { id: 'f1', label: 'Álbum de fotos — definir tipo e quantidade' },
+          { id: 'f2', label: 'Cópias extras — verificar quantidade e formato' },
+          { id: 'f3', label: 'Ampliações — definir fotos e tamanhos' },
+          { id: 'f4', label: 'Fotos para porta-retrato' },
+          { id: 'f5', label: 'Fotos externas (locação externa)' },
+          { id: 'f6', label: 'Filmagem — definir pacote com videomaker' },
+        ]
+      },
+      {
+        id: 'impressos', icon: '🖨️', name: 'Materiais Impressos', items: [
+          { id: 'i1', label: 'Convites — caixa, flores e impressão', tip: 'Confirmar quantidade total incluindo padrinhos e fornecedores.' },
+          { id: 'i2', label: 'Cartões de agradecimento' },
+          { id: 'i3', label: 'Cardápio impresso para as mesas' },
+          { id: 'i4', label: 'Numeração das mesas' },
+          { id: 'i5', label: 'Nome e número das mesas (porta-nomes)' },
+          { id: 'i6', label: 'Cartões de mesa para recados / livro de mensagens' },
+          { id: 'i7', label: 'R.S.V.P. — confirmar sistema de confirmação de presença', tip: 'WhatsApp, formulário online ou cerimonialista.' },
+        ]
+      },
+      {
+        id: 'servicos', icon: '✨', name: 'Serviços Extras', items: [
+          { id: 'se1', label: 'Máquina de bolhas de sabão' },
+          { id: 'se2', label: 'Fogos outdoor' },
+          { id: 'se3', label: 'Fogos indoor' },
+          { id: 'se4', label: 'Máquina de pétalas' },
+          { id: 'se5', label: 'Sky Walker / efeito neve' },
+          { id: 'se6', label: 'Outros itens especiais a escolher', tip: 'Balões, champanhe de entrada, arco de flores etc.' },
+        ]
+      },
+      {
+        id: 'noiva', icon: '👰', name: 'Para a Noiva', items: [
+          { id: 'n1', label: 'Dia da noiva — reservar local e horário', tag: 'urgente' },
+          { id: 'n2', label: 'Maquiagem — prova' },
+          { id: 'n3', label: 'Cabelo — prova' },
+          { id: 'n4', label: 'Jóias e acessórios — definir e separar' },
+          { id: 'n5', label: 'Roupas íntimas (base para o vestido)' },
+          { id: 'n6', label: 'Transporte da noiva — confirmar carro/carruagem' },
+          { id: 'n7', label: 'Vestido — escolha' },
+          { id: 'n8', label: 'Vestido — provas', tip: 'Mínimo 2 provas recomendadas.' },
+          { id: 'n9', label: 'Vestido — alterações finais' },
+          { id: 'n10', label: 'Véu e grinalda' },
+          { id: 'n11', label: 'Sapatos', tip: 'Fazer o teste caminhando por bastante tempo.' },
+          { id: 'n12', label: 'Sapatos — provas com o vestido' },
+          { id: 'n13', label: 'Sapatos — ajustes / salto' },
+          { id: 'n14', label: 'Buquê da noiva — definir e encomendar' },
+          { id: 'n15', label: 'Buquê das damas — definir e encomendar' },
+          { id: 'n16', label: 'Combinar horário do dia da noiva com mãe e damas', tip: 'Avisar com antecedência para garantir presença de todas.', tag: 'novo' },
+          { id: 'n17', label: 'Confirmar cabeleireiro e maquiadora para damas (se necessário)', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'noivo', icon: '🤵', name: 'Para o Noivo', items: [
+          { id: 'no1', label: 'Terno — escolha' },
+          { id: 'no2', label: 'Terno — provas' },
+          { id: 'no3', label: 'Terno — alterações' },
+          { id: 'no4', label: 'Sapato do noivo' },
+          { id: 'no5', label: 'Transporte do noivo — confirmar' },
+          { id: 'no6', label: 'Lapela (boutonnière)' },
+          { id: 'no7', label: 'Combinar horário de chegada à cerimônia com o noivo', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'padrinhos', icon: '🥂', name: 'Padrinhos, Damas & Pajens', items: [
+          { id: 'pd1', label: 'Definir trajes dos padrinhos (cor/modelo)' },
+          { id: 'pd2', label: 'Confirmar aluguel ou compra dos trajes dos padrinhos', tip: 'Dar prazo para que cada padrinho providencie.', tag: 'urgente' },
+          { id: 'pd3', label: 'Definir trajes das daminhas' },
+          { id: 'pd4', label: 'Definir trajes dos pajens' },
+          { id: 'pd5', label: 'Falar com a mãe das daminhas sobre vestidos e medidas', tip: 'Confirmar tamanhos e comunicar prazo de entrega.', tag: 'novo' },
+          { id: 'pd6', label: 'Falar com a mãe dos pajens sobre trajes e medidas', tip: 'Confirmar tamanhos, modelo do terno/roupa e sapatos.', tag: 'novo' },
+          { id: 'pd7', label: 'Confirmar disponibilidade dos padrinhos no dia do ensaio', tag: 'novo' },
+          { id: 'pd8', label: 'Ensaio geral com padrinhos, damas e pajens na cerimônia', tag: 'novo' },
+          { id: 'pd9', label: 'Entregar cronograma do dia para cada padrinho/dama', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'religioso', icon: '⛪', name: 'Cerimônia Religiosa', items: [
+          { id: 'r1', label: 'Escolher local para a cerimônia' },
+          { id: 'r2', label: 'Taxa da igreja — pagar e confirmar' },
+          { id: 'r3', label: 'Curso de noivos — inscrição e datas', tag: 'urgente' },
+          { id: 'r4', label: 'Confirmação com o padre / celebrante' },
+          { id: 'r5', label: 'Músicos / Coral — contratar' },
+          { id: 'r6', label: 'Banda para cerimônia (se houver)' },
+          { id: 'r7', label: 'Música para entrada do noivo e padrinhos' },
+          { id: 'r8', label: 'Música para entrada das daminhas e pajens' },
+          { id: 'r9', label: 'Música para entrada da noiva' },
+          { id: 'r10', label: 'Música para o pedido / troca de votos' },
+          { id: 'r11', label: 'Música para bênção das alianças' },
+          { id: 'r12', label: 'Música para cumprimentos' },
+          { id: 'r13', label: 'Música para saída dos noivos' },
+          { id: 'r14', label: 'Alianças — comprar / encomendar', tag: 'urgente' },
+          { id: 'r15', label: 'Decoração e florista — altar, bancos e corredor' },
+          { id: 'r16', label: 'Altar — definir arranjo e decoração' },
+          { id: 'r17', label: 'Corredor — pétalas, tapete ou fita' },
+          { id: 'r18', label: 'Carruagem ou carro especial para saída' },
+          { id: 'r19', label: 'Foto na cerimônia — passar orientações ao fotógrafo', tag: 'novo' },
+          { id: 'r20', label: 'Confirmar horário de início com padre e músicos', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'civil', icon: '📜', name: 'Casamento Civil', items: [
+          { id: 'cv1', label: 'Escolher local / cartório para cerimônia civil' },
+          { id: 'cv2', label: 'Taxa do cartório — pagar e confirmar' },
+          { id: 'cv3', label: 'Separar documentos necessários (RG, certidão etc)', tip: 'Verificar com o cartório lista completa de documentos.', tag: 'urgente' },
+          { id: 'cv4', label: 'Confirmar testemunhas do casamento civil', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'recepcao', icon: '🎉', name: 'Recepção / Festa', items: [
+          { id: 'rc1', label: 'Definir local para recepção (salão, sítio, espaço)' },
+          { id: 'rc2', label: 'Aluguel do local — assinar contrato', tag: 'urgente' },
+          { id: 'rc3', label: 'Tipo de serviço — jantar, coquetel, brunch etc.' },
+          { id: 'rc4', label: 'Escolha do buffet — degustação e contrato' },
+          { id: 'rc5', label: 'Definição do cardápio' },
+          { id: 'rc6', label: 'Bebidas — definir tipos e quantidades' },
+          { id: 'rc7', label: 'Bolos e doces — encomendar' },
+          { id: 'rc8', label: 'Forminhas para doces' },
+          { id: 'rc9', label: 'Lembrancinhas — bem-casado' },
+          { id: 'rc10', label: 'Noivinhos para o bolo — encomendar/comprar' },
+          { id: 'rc11', label: 'Cesta de acessórios para banheiro (lavabos)' },
+          { id: 'rc12', label: 'Kit emergência (agulha, fita, remédios etc.)' },
+          { id: 'rc13', label: 'Tipo de mesas e cadeiras — definir e locar' },
+          { id: 'rc14', label: 'Decoração — flores, toalhas, arranjos de mesa' },
+          { id: 'rc15', label: 'Decoração — porta de entrada' },
+          { id: 'rc16', label: 'Decoração — salão geral' },
+          { id: 'rc17', label: 'Decoração — mesa principal' },
+          { id: 'rc18', label: 'Decoração — mesa dos convidados' },
+          { id: 'rc19', label: 'Decoração — mesa do bolo' },
+          { id: 'rc20', label: 'Apetrechos para festa (balões, faixas etc.)' },
+          { id: 'rc21', label: 'Número de convidados — confirmação final (RSVP)' },
+          { id: 'rc22', label: 'Quantidade de garçons — contratar', tip: 'Regra geral: 1 garçom para cada 10–15 convidados.' },
+          { id: 'rc23', label: 'Manobristas — contratar se necessário' },
+          { id: 'rc24', label: 'Limpeza de mesas e banheiros durante a festa' },
+          { id: 'rc25', label: 'Cerimonialista — contratar', tag: 'urgente' },
+          { id: 'rc26', label: 'Confirmar horário de montagem da decoração com o local', tag: 'novo' },
+          { id: 'rc27', label: 'Falar com o buffet sobre restrições alimentares dos convidados', tip: 'Verificar vegetarianos, alérgicos, intolerâncias.', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'musica', icon: '🎵', name: 'Música & Entretenimento (Festa)', items: [
+          { id: 'ms1', label: 'Banda ou DJ — contratar' },
+          { id: 'ms2', label: 'Som / Telão / Iluminação — contratar' },
+          { id: 'ms3', label: 'Palco e pista de dança — verificar com o local' },
+          { id: 'ms4', label: 'Música para entrada / cumprimentos na festa' },
+          { id: 'ms5', label: 'Música durante o jantar/festa' },
+          { id: 'ms6', label: 'Música para dança dos noivos (valsa)' },
+          { id: 'ms7', label: 'Valsa dos pais' },
+          { id: 'ms8', label: 'Valsa dos padrinhos' },
+          { id: 'ms9', label: 'Passar playlist e restrições para a banda/DJ', tag: 'novo' },
+        ]
+      },
+      {
+        id: 'luademel', icon: '🌙', name: 'Lua de Mel', items: [
+          { id: 'lm1', label: 'Hotel para a noite de núpcias — reservar', tag: 'urgente' },
+          { id: 'lm2', label: 'Destino da lua de mel — definir' },
+          { id: 'lm3', label: 'Agência de turismo — pesquisar e contratar' },
+          { id: 'lm4', label: 'Passagens aéreas — comprar' },
+          { id: 'lm5', label: 'Hotel durante a viagem — reservar' },
+          { id: 'lm6', label: 'Roteiro de passeios — planejar' },
+          { id: 'lm7', label: 'Malas para viagem — preparar lista' },
+          { id: 'lm8', label: 'Verificar documentos válidos (passaporte, visto)', tip: 'Passaporte deve ter validade mínima de 6 meses.', tag: 'novo' },
+          { id: 'lm9', label: 'Seguro viagem — contratar', tag: 'novo' },
+        ]
+      },
+    ];
+
+    // ─── STATE ───────────────────────────────────────────────────────────────────
+    let state = {};          // { item_id: true/false }
+    let currentFilter = 'all';
+    let channel = null;
+
+    // ─── SUPABASE HELPERS ────────────────────────────────────────────────────────
+    async function loadFromDB() {
+      const { data, error } = await db.from('checklist').select('item_id, done');
+      if (error) { console.error(error); return; }
+      state = {};
+      data.forEach(row => { state[row.item_id] = row.done; });
+
+      // Seed initial done items if DB is empty
+      const allItems = DATA.flatMap(s => s.items);
+      const seedItems = allItems.filter(it => it.done && state[it.id] === undefined);
+      if (seedItems.length > 0) {
+        await db.from('checklist').upsert(seedItems.map(it => ({ item_id: it.id, done: true })));
+        seedItems.forEach(it => { state[it.id] = true; });
+      }
+    }
+
+    async function toggleItem(id) {
+      const el = document.getElementById('item-' + id);
+      el.classList.add('saving');
+      setSyncStatus('syncing');
+
+      const newVal = !state[id];
+      state[id] = newVal;
+
+      const { error } = await db.from('checklist').upsert({ item_id: id, done: newVal }, { onConflict: 'item_id' });
+      if (error) { console.error(error); state[id] = !newVal; setSyncStatus('offline'); }
+      else { setSyncStatus('online'); }
+
+      el.classList.remove('saving');
+      renderAll();
+    }
+
+    function subscribeRealtime() {
+      channel = db.channel('checklist-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, payload => {
+          const { item_id, done } = payload.new || {};
+          if (item_id !== undefined) { state[item_id] = done; renderAll(); }
+        })
+        .subscribe();
+    }
+
+    // ─── UI ──────────────────────────────────────────────────────────────────────
+    function setSyncStatus(s) {
+      const el = document.getElementById('syncStatus');
+      el.className = 'sync-status ' + s;
+      el.textContent = s === 'online' ? '● sincronizado' : s === 'syncing' ? '⟳ salvando…' : '✕ sem conexão';
+    }
+
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterItems();
+    }
+
+    function filterItems() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      let anyVisible = false;
+      DATA.forEach(section => {
+        const sEl = document.getElementById('sec-' + section.id);
+        if (!sEl) return;
+        let sv = false;
+        section.items.forEach(item => {
+          const el = document.getElementById('item-' + item.id);
+          if (!el) return;
+          const isDone = !!state[item.id];
+          const ms = !q || item.label.toLowerCase().includes(q) || (item.tip && item.tip.toLowerCase().includes(q));
+          const mf = currentFilter === 'all' || (currentFilter === 'done' && isDone) || (currentFilter === 'pending' && !isDone);
+          const vis = ms && mf;
+          el.classList.toggle('hidden', !vis);
+          if (vis) { sv = true; anyVisible = true; }
+        });
+        sEl.style.display = sv ? '' : 'none';
+      });
+      document.getElementById('emptyMsg').style.display = anyVisible ? 'none' : 'block';
+    }
+
+    function renderAll() {
+      const container = document.getElementById('sections');
+      let totalDone = 0, totalAll = 0;
+
+      DATA.forEach(section => {
+        const doneCnt = section.items.filter(it => !!state[it.id]).length;
+        const total = section.items.length;
+        totalDone += doneCnt; totalAll += total;
+        const isComplete = doneCnt === total;
+
+        let el = document.getElementById('sec-' + section.id);
+        const wasOpen = el ? el.classList.contains('open') : true;
+
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'sec-' + section.id;
+          el.className = 'section' + (wasOpen ? ' open' : '');
+          container.appendChild(el);
+        }
+
+        el.innerHTML = `
+      <div class="section-progress"><div class="section-progress-fill" style="width:${total ? doneCnt / total * 100 : 0}%"></div></div>
+      <div class="section-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="section-title"><span class="section-icon">${section.icon}</span><span class="section-name">${section.name}</span></div>
+        <span class="section-count ${isComplete ? 'complete' : ''}">${doneCnt}/${total}</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="items-list">
+        ${section.items.map(item => {
+          const isDone = !!state[item.id];
+          return `<div class="item ${isDone ? 'done' : ''}" id="item-${item.id}" onclick="toggleItem('${item.id}')">
+            <div class="item-check"></div>
+            <div class="item-text">
+              <div class="item-label">${item.label}</div>
+              ${item.tip ? `<div class="item-tip">💡 ${item.tip}</div>` : ''}
+            </div>
+            ${item.tag ? `<span class="item-tag ${item.tag}">${item.tag === 'urgente' ? '🔴 urgente' : item.tag === 'novo' ? '🌿 sugestão' : item.tag}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div>`;
+
+        if (wasOpen) el.classList.add('open');
+      });
+
+      const pct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+      document.getElementById('globalBar').style.width = pct + '%';
+      document.getElementById('globalLabel').textContent = `${totalDone} de ${totalAll} tarefas concluídas (${pct}%)`;
+      filterItems();
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    (async () => {
+      await loadFromDB();
+      renderAll();
+      subscribeRealtime();
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    })();
+  </script>
+</body>
+
+</html>
