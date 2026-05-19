@@ -5,22 +5,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checklist do Casamento 💍</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --cream: #faf6f0;
-      --blush: #e8c4b8;
-      --rose: #c17b6e;
-      --deep: #3d2b2b;
-      --gold: #c9a96e;
-      --sage: #8a9e8a;
-      --done: #6b9b7a;
-      --light: #f4ede4;
-      --border: #ddd0c4;
-      --shadow: rgba(61, 43, 43, 0.08);
+      /* Nova paleta: Azul Serenity, Azul Médio, Azul Marinho e Palha */
+      --cream: #fbfaf8; 
+      --straw: #e4d5b7;
+      --serenity: #b3c6df;
+      --blue-medium: #5b7b9c;
+      --navy: #18283e;
+      
+      --deep: var(--navy);
+      --rose: var(--blue-medium);
+      --blush: var(--serenity);
+      --gold: var(--straw);
+      --sage: var(--blue-medium);
+      --done: var(--blue-medium);
+      --light: #eef2f6;
+      --border: #d0dbe8;
+      --shadow: rgba(24, 40, 62, 0.08);
     }
 
     * {
@@ -30,7 +34,7 @@
     }
 
     body {
-      font-family: 'Jost', sans-serif;
+      font-family: 'Montserrat', sans-serif;
       background: var(--cream);
       color: var(--deep);
       min-height: 100vh;
@@ -53,7 +57,7 @@
     }
 
     header h1 {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Playfair Display', serif;
       font-size: clamp(2rem, 5vw, 3.2rem);
       font-weight: 300;
       color: var(--cream);
@@ -139,7 +143,7 @@
       border: 1.5px solid var(--border);
       border-radius: 8px;
       background: white;
-      font-family: 'Jost', sans-serif;
+      font-family: 'Montserrat', sans-serif;
       font-size: 0.92rem;
       color: var(--deep);
       outline: none;
@@ -164,7 +168,7 @@
       border-radius: 99px;
       border: 1.5px solid var(--border);
       background: white;
-      font-family: 'Jost', sans-serif;
+      font-family: 'Montserrat', sans-serif;
       font-size: 0.8rem;
       font-weight: 500;
       color: var(--deep);
@@ -232,7 +236,7 @@
     }
 
     .section-name {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 1.22rem;
       font-weight: 600;
       color: var(--deep);
@@ -347,7 +351,7 @@
       color: var(--sage);
       margin-top: 3px;
       font-style: italic;
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Playfair Display', serif;
       line-height: 1.4;
     }
 
@@ -418,7 +422,7 @@
     }
 
     .loading-text {
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 1.1rem;
       color: var(--rose);
       font-style: italic;
@@ -428,7 +432,7 @@
       text-align: center;
       padding: 48px 24px;
       color: var(--sage);
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 1.2rem;
       font-style: italic;
       display: none;
@@ -453,6 +457,144 @@
         padding: 16px 14px;
       }
     }
+  
+    .item-assignee {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: var(--serenity);
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      align-self: center;
+      flex-shrink: 0;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .item-assignee.Fhelipe { background: #d0e4f2; color: #1e4b6d; }
+    .item-assignee.Maria { background: #f2e3d0; color: #6d4a1e; }
+    .item-assignee.Helena { background: #e2d0f2; color: #4a1e6d; }
+
+  
+    /* FAB (Floating Action Button) para adicionar tarefa */
+    .fab-add {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--navy);
+      color: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 12px rgba(24, 40, 62, 0.3);
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s;
+    }
+    .fab-add:hover { transform: scale(1.08); }
+
+    /* Delete button on items */
+    .item-delete {
+      opacity: 0;
+      color: #c17b6e;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      transition: opacity 0.2s;
+      margin-left: 12px;
+    }
+    .item:hover .item-delete { opacity: 1; }
+    
+    @media (max-width: 520px) {
+      .item-delete { opacity: 1; }
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(24, 40, 62, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      padding: 20px;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      background: var(--cream);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+    .modal-overlay.open .modal-content {
+      transform: translateY(0);
+    }
+    .modal-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--navy);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--blue-medium);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.95rem;
+      color: var(--navy);
+      background: white;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-cancel {
+      background: transparent;
+      color: var(--blue-medium);
+    }
+    .btn-save {
+      background: var(--navy);
+      color: var(--cream);
+    }
+    .btn-save:hover { background: var(--blue-medium); }
+
   </style>
 </head>
 
@@ -480,9 +622,41 @@
     <button class="filter-btn" onclick="setFilter('pending',this)">Pendentes</button>
     <button class="filter-btn" onclick="setFilter('done',this)">Concluídas</button>
   </div>
+  <div class="filter-row" id="assigneeFilters" style="margin-top: 8px;"></div>
 
   <div class="sections" id="sections"></div>
   <div class="empty-search" id="emptyMsg">Nenhuma tarefa encontrada 🌸</div>
+
+  
+  <div class="fab-add" onclick="openModal()">+</div>
+
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal-content">
+      <div class="modal-header">Nova Tarefa</div>
+      <div class="form-group">
+        <label>O que precisa ser feito?</label>
+        <input type="text" id="newTaskLabel" placeholder="Ex: Prova do vestido">
+      </div>
+      <div class="form-group">
+        <label>Em qual categoria?</label>
+        <select id="newTaskSection"></select>
+      </div>
+      <div class="form-group">
+        <label>Quem será o responsável?</label>
+        <select id="newTaskAssigneeType" onchange="toggleNewAssigneeInput()">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+      <div class="form-group" id="newAssigneeWrapper" style="display:none;">
+        <label>Nome do novo responsável</label>
+        <input type="text" id="newAssigneeName" placeholder="Ex: Cerimonialista">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-save" onclick="saveNewTask()">Adicionar</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ─── CONFIGURAÇÃO SUPABASE ───────────────────────────────────────────────────
@@ -495,183 +669,183 @@
     const DATA = [
       {
         id: 'geral', icon: '📋', name: 'Geral', items: [
-          { id: 'g1', label: 'Definição da data', done: true },
-          { id: 'g2', label: 'Lista de convidados', done: true },
-          { id: 'g3', label: 'Escolha de padrinhos', done: true },
-          { id: 'g4', label: 'Convites personalizados para padrinhos', done: true },
-          { id: 'g5', label: 'Escolha de damas e pagens', done: true },
-          { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.' },
-          { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker' },
-          { id: 'g8', label: 'Ensaio de fotos (pré-wedding)' },
-          { id: 'g9', label: 'Levar fotos retrospectiva para o fotógrafo' },
-          { id: 'g10', label: 'Entrevista dos noivos', tip: 'Confirmar data/hora com o fotógrafo ou videomaker.' },
-          { id: 'g11', label: 'Passar localização do dia da noiva para o fotógrafo' },
-          { id: 'g12', label: 'Confirmar cronograma com pais e padrinhos', tag: 'urgente' },
+          { id: 'g1', label: 'Definição da data', done: true, assignee: 'Fhelipe' },
+          { id: 'g2', label: 'Lista de convidados', done: true, assignee: 'Maria' },
+          { id: 'g3', label: 'Escolha de padrinhos', done: true, assignee: 'Helena' },
+          { id: 'g4', label: 'Convites personalizados para padrinhos', done: true, assignee: 'Fhelipe' },
+          { id: 'g5', label: 'Escolha de damas e pagens', done: true, assignee: 'Maria' },
+          { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.', assignee: 'Helena' },
+          { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker', assignee: 'Fhelipe' },
+          { id: 'g8', label: 'Ensaio de fotos (pré-wedding)', assignee: 'Maria' },
+          { id: 'g9', label: 'Levar fotos retrospectiva para o fotógrafo', assignee: 'Helena' },
+          { id: 'g10', label: 'Entrevista dos noivos', tip: 'Confirmar data/hora com o fotógrafo ou videomaker.', assignee: 'Fhelipe' },
+          { id: 'g11', label: 'Passar localização do dia da noiva para o fotógrafo', assignee: 'Maria' },
+          { id: 'g12', label: 'Confirmar cronograma com pais e padrinhos', tag: 'urgente', assignee: 'Helena' },
         ]
       },
       {
         id: 'fotos', icon: '📸', name: 'Foto & Álbum', items: [
-          { id: 'f1', label: 'Álbum de fotos — definir tipo e quantidade' },
-          { id: 'f2', label: 'Cópias extras — verificar quantidade e formato' },
-          { id: 'f3', label: 'Ampliações — definir fotos e tamanhos' },
-          { id: 'f4', label: 'Fotos para porta-retrato' },
-          { id: 'f5', label: 'Fotos externas (locação externa)' },
-          { id: 'f6', label: 'Filmagem — definir pacote com videomaker' },
+          { id: 'f1', label: 'Álbum de fotos — definir tipo e quantidade', assignee: 'Fhelipe' },
+          { id: 'f2', label: 'Cópias extras — verificar quantidade e formato', assignee: 'Maria' },
+          { id: 'f3', label: 'Ampliações — definir fotos e tamanhos', assignee: 'Helena' },
+          { id: 'f4', label: 'Fotos para porta-retrato', assignee: 'Fhelipe' },
+          { id: 'f5', label: 'Fotos externas (locação externa)', assignee: 'Maria' },
+          { id: 'f6', label: 'Filmagem — definir pacote com videomaker', assignee: 'Helena' },
         ]
       },
       {
         id: 'impressos', icon: '🖨️', name: 'Materiais Impressos', items: [
-          { id: 'i1', label: 'Convites — caixa, flores e impressão', tip: 'Confirmar quantidade total incluindo padrinhos e fornecedores.' },
-          { id: 'i2', label: 'Cartões de agradecimento' },
-          { id: 'i3', label: 'Cardápio impresso para as mesas' },
-          { id: 'i4', label: 'Numeração das mesas' },
-          { id: 'i5', label: 'Nome e número das mesas (porta-nomes)' },
-          { id: 'i6', label: 'Cartões de mesa para recados / livro de mensagens' },
-          { id: 'i7', label: 'R.S.V.P. — confirmar sistema de confirmação de presença', tip: 'WhatsApp, formulário online ou cerimonialista.' },
+          { id: 'i1', label: 'Convites — caixa, flores e impressão', tip: 'Confirmar quantidade total incluindo padrinhos e fornecedores.', assignee: 'Fhelipe' },
+          { id: 'i2', label: 'Cartões de agradecimento', assignee: 'Maria' },
+          { id: 'i3', label: 'Cardápio impresso para as mesas', assignee: 'Helena' },
+          { id: 'i4', label: 'Numeração das mesas', assignee: 'Fhelipe' },
+          { id: 'i5', label: 'Nome e número das mesas (porta-nomes)', assignee: 'Maria' },
+          { id: 'i6', label: 'Cartões de mesa para recados / livro de mensagens', assignee: 'Helena' },
+          { id: 'i7', label: 'R.S.V.P. — confirmar sistema de confirmação de presença', tip: 'WhatsApp, formulário online ou cerimonialista.', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'servicos', icon: '✨', name: 'Serviços Extras', items: [
-          { id: 'se1', label: 'Máquina de bolhas de sabão' },
-          { id: 'se2', label: 'Fogos outdoor' },
-          { id: 'se3', label: 'Fogos indoor' },
-          { id: 'se4', label: 'Máquina de pétalas' },
-          { id: 'se5', label: 'Sky Walker / efeito neve' },
-          { id: 'se6', label: 'Outros itens especiais a escolher', tip: 'Balões, champanhe de entrada, arco de flores etc.' },
+          { id: 'se1', label: 'Máquina de bolhas de sabão', assignee: 'Maria' },
+          { id: 'se2', label: 'Fogos outdoor', assignee: 'Helena' },
+          { id: 'se3', label: 'Fogos indoor', assignee: 'Fhelipe' },
+          { id: 'se4', label: 'Máquina de pétalas', assignee: 'Maria' },
+          { id: 'se5', label: 'Sky Walker / efeito neve', assignee: 'Helena' },
+          { id: 'se6', label: 'Outros itens especiais a escolher', tip: 'Balões, champanhe de entrada, arco de flores etc.', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'noiva', icon: '👰', name: 'Para a Noiva', items: [
-          { id: 'n1', label: 'Dia da noiva — reservar local e horário', tag: 'urgente' },
-          { id: 'n2', label: 'Maquiagem — prova' },
-          { id: 'n3', label: 'Cabelo — prova' },
-          { id: 'n4', label: 'Jóias e acessórios — definir e separar' },
-          { id: 'n5', label: 'Roupas íntimas (base para o vestido)' },
-          { id: 'n6', label: 'Transporte da noiva — confirmar carro/carruagem' },
-          { id: 'n7', label: 'Vestido — escolha' },
-          { id: 'n8', label: 'Vestido — provas', tip: 'Mínimo 2 provas recomendadas.' },
-          { id: 'n9', label: 'Vestido — alterações finais' },
-          { id: 'n10', label: 'Véu e grinalda' },
-          { id: 'n11', label: 'Sapatos', tip: 'Fazer o teste caminhando por bastante tempo.' },
-          { id: 'n12', label: 'Sapatos — provas com o vestido' },
-          { id: 'n13', label: 'Sapatos — ajustes / salto' },
-          { id: 'n14', label: 'Buquê da noiva — definir e encomendar' },
-          { id: 'n15', label: 'Buquê das damas — definir e encomendar' },
-          { id: 'n16', label: 'Combinar horário do dia da noiva com mãe e damas', tip: 'Avisar com antecedência para garantir presença de todas.', tag: 'novo' },
-          { id: 'n17', label: 'Confirmar cabeleireiro e maquiadora para damas (se necessário)', tag: 'novo' },
+          { id: 'n1', label: 'Dia da noiva — reservar local e horário', tag: 'urgente', assignee: 'Maria' },
+          { id: 'n2', label: 'Maquiagem — prova', assignee: 'Helena' },
+          { id: 'n3', label: 'Cabelo — prova', assignee: 'Fhelipe' },
+          { id: 'n4', label: 'Jóias e acessórios — definir e separar', assignee: 'Maria' },
+          { id: 'n5', label: 'Roupas íntimas (base para o vestido)', assignee: 'Helena' },
+          { id: 'n6', label: 'Transporte da noiva — confirmar carro/carruagem', assignee: 'Fhelipe' },
+          { id: 'n7', label: 'Vestido — escolha', assignee: 'Maria' },
+          { id: 'n8', label: 'Vestido — provas', tip: 'Mínimo 2 provas recomendadas.', assignee: 'Helena' },
+          { id: 'n9', label: 'Vestido — alterações finais', assignee: 'Fhelipe' },
+          { id: 'n10', label: 'Véu e grinalda', assignee: 'Maria' },
+          { id: 'n11', label: 'Sapatos', tip: 'Fazer o teste caminhando por bastante tempo.', assignee: 'Helena' },
+          { id: 'n12', label: 'Sapatos — provas com o vestido', assignee: 'Fhelipe' },
+          { id: 'n13', label: 'Sapatos — ajustes / salto', assignee: 'Maria' },
+          { id: 'n14', label: 'Buquê da noiva — definir e encomendar', assignee: 'Helena' },
+          { id: 'n15', label: 'Buquê das damas — definir e encomendar', assignee: 'Fhelipe' },
+          { id: 'n16', label: 'Combinar horário do dia da noiva com mãe e damas', tip: 'Avisar com antecedência para garantir presença de todas.', tag: 'novo', assignee: 'Maria' },
+          { id: 'n17', label: 'Confirmar cabeleireiro e maquiadora para damas (se necessário)', tag: 'novo', assignee: 'Helena' },
         ]
       },
       {
         id: 'noivo', icon: '🤵', name: 'Para o Noivo', items: [
-          { id: 'no1', label: 'Terno — escolha' },
-          { id: 'no2', label: 'Terno — provas' },
-          { id: 'no3', label: 'Terno — alterações' },
-          { id: 'no4', label: 'Sapato do noivo' },
-          { id: 'no5', label: 'Transporte do noivo — confirmar' },
-          { id: 'no6', label: 'Lapela (boutonnière)' },
-          { id: 'no7', label: 'Combinar horário de chegada à cerimônia com o noivo', tag: 'novo' },
+          { id: 'no1', label: 'Terno — escolha', assignee: 'Fhelipe' },
+          { id: 'no2', label: 'Terno — provas', assignee: 'Maria' },
+          { id: 'no3', label: 'Terno — alterações', assignee: 'Helena' },
+          { id: 'no4', label: 'Sapato do noivo', assignee: 'Fhelipe' },
+          { id: 'no5', label: 'Transporte do noivo — confirmar', assignee: 'Maria' },
+          { id: 'no6', label: 'Lapela (boutonnière)', assignee: 'Helena' },
+          { id: 'no7', label: 'Combinar horário de chegada à cerimônia com o noivo', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'padrinhos', icon: '🥂', name: 'Padrinhos, Damas & Pajens', items: [
-          { id: 'pd1', label: 'Definir trajes dos padrinhos (cor/modelo)' },
-          { id: 'pd2', label: 'Confirmar aluguel ou compra dos trajes dos padrinhos', tip: 'Dar prazo para que cada padrinho providencie.', tag: 'urgente' },
-          { id: 'pd3', label: 'Definir trajes das daminhas' },
-          { id: 'pd4', label: 'Definir trajes dos pajens' },
-          { id: 'pd5', label: 'Falar com a mãe das daminhas sobre vestidos e medidas', tip: 'Confirmar tamanhos e comunicar prazo de entrega.', tag: 'novo' },
-          { id: 'pd6', label: 'Falar com a mãe dos pajens sobre trajes e medidas', tip: 'Confirmar tamanhos, modelo do terno/roupa e sapatos.', tag: 'novo' },
-          { id: 'pd7', label: 'Confirmar disponibilidade dos padrinhos no dia do ensaio', tag: 'novo' },
-          { id: 'pd8', label: 'Ensaio geral com padrinhos, damas e pajens na cerimônia', tag: 'novo' },
-          { id: 'pd9', label: 'Entregar cronograma do dia para cada padrinho/dama', tag: 'novo' },
+          { id: 'pd1', label: 'Definir trajes dos padrinhos (cor/modelo)', assignee: 'Maria' },
+          { id: 'pd2', label: 'Confirmar aluguel ou compra dos trajes dos padrinhos', tip: 'Dar prazo para que cada padrinho providencie.', tag: 'urgente', assignee: 'Helena' },
+          { id: 'pd3', label: 'Definir trajes das daminhas', assignee: 'Fhelipe' },
+          { id: 'pd4', label: 'Definir trajes dos pajens', assignee: 'Maria' },
+          { id: 'pd5', label: 'Falar com a mãe das daminhas sobre vestidos e medidas', tip: 'Confirmar tamanhos e comunicar prazo de entrega.', tag: 'novo', assignee: 'Helena' },
+          { id: 'pd6', label: 'Falar com a mãe dos pajens sobre trajes e medidas', tip: 'Confirmar tamanhos, modelo do terno/roupa e sapatos.', tag: 'novo', assignee: 'Fhelipe' },
+          { id: 'pd7', label: 'Confirmar disponibilidade dos padrinhos no dia do ensaio', tag: 'novo', assignee: 'Maria' },
+          { id: 'pd8', label: 'Ensaio geral com padrinhos, damas e pajens na cerimônia', tag: 'novo', assignee: 'Helena' },
+          { id: 'pd9', label: 'Entregar cronograma do dia para cada padrinho/dama', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'religioso', icon: '⛪', name: 'Cerimônia Religiosa', items: [
-          { id: 'r1', label: 'Escolher local para a cerimônia' },
-          { id: 'r2', label: 'Taxa da igreja — pagar e confirmar' },
-          { id: 'r3', label: 'Curso de noivos — inscrição e datas', tag: 'urgente' },
-          { id: 'r4', label: 'Confirmação com o padre / celebrante' },
-          { id: 'r5', label: 'Músicos / Coral — contratar' },
-          { id: 'r6', label: 'Banda para cerimônia (se houver)' },
-          { id: 'r7', label: 'Música para entrada do noivo e padrinhos' },
-          { id: 'r8', label: 'Música para entrada das daminhas e pajens' },
-          { id: 'r9', label: 'Música para entrada da noiva' },
-          { id: 'r10', label: 'Música para o pedido / troca de votos' },
-          { id: 'r11', label: 'Música para bênção das alianças' },
-          { id: 'r12', label: 'Música para cumprimentos' },
-          { id: 'r13', label: 'Música para saída dos noivos' },
-          { id: 'r14', label: 'Alianças — comprar / encomendar', tag: 'urgente' },
-          { id: 'r15', label: 'Decoração e florista — altar, bancos e corredor' },
-          { id: 'r16', label: 'Altar — definir arranjo e decoração' },
-          { id: 'r17', label: 'Corredor — pétalas, tapete ou fita' },
-          { id: 'r18', label: 'Carruagem ou carro especial para saída' },
-          { id: 'r19', label: 'Foto na cerimônia — passar orientações ao fotógrafo', tag: 'novo' },
-          { id: 'r20', label: 'Confirmar horário de início com padre e músicos', tag: 'novo' },
+          { id: 'r1', label: 'Escolher local para a cerimônia', assignee: 'Maria' },
+          { id: 'r2', label: 'Taxa da igreja — pagar e confirmar', assignee: 'Helena' },
+          { id: 'r3', label: 'Curso de noivos — inscrição e datas', tag: 'urgente', assignee: 'Fhelipe' },
+          { id: 'r4', label: 'Confirmação com o padre / celebrante', assignee: 'Maria' },
+          { id: 'r5', label: 'Músicos / Coral — contratar', assignee: 'Helena' },
+          { id: 'r6', label: 'Banda para cerimônia (se houver)', assignee: 'Fhelipe' },
+          { id: 'r7', label: 'Música para entrada do noivo e padrinhos', assignee: 'Maria' },
+          { id: 'r8', label: 'Música para entrada das daminhas e pajens', assignee: 'Helena' },
+          { id: 'r9', label: 'Música para entrada da noiva', assignee: 'Fhelipe' },
+          { id: 'r10', label: 'Música para o pedido / troca de votos', assignee: 'Maria' },
+          { id: 'r11', label: 'Música para bênção das alianças', assignee: 'Helena' },
+          { id: 'r12', label: 'Música para cumprimentos', assignee: 'Fhelipe' },
+          { id: 'r13', label: 'Música para saída dos noivos', assignee: 'Maria' },
+          { id: 'r14', label: 'Alianças — comprar / encomendar', tag: 'urgente', assignee: 'Helena' },
+          { id: 'r15', label: 'Decoração e florista — altar, bancos e corredor', assignee: 'Fhelipe' },
+          { id: 'r16', label: 'Altar — definir arranjo e decoração', assignee: 'Maria' },
+          { id: 'r17', label: 'Corredor — pétalas, tapete ou fita', assignee: 'Helena' },
+          { id: 'r18', label: 'Carruagem ou carro especial para saída', assignee: 'Fhelipe' },
+          { id: 'r19', label: 'Foto na cerimônia — passar orientações ao fotógrafo', tag: 'novo', assignee: 'Maria' },
+          { id: 'r20', label: 'Confirmar horário de início com padre e músicos', tag: 'novo', assignee: 'Helena' },
         ]
       },
       {
         id: 'civil', icon: '📜', name: 'Casamento Civil', items: [
-          { id: 'cv1', label: 'Escolher local / cartório para cerimônia civil' },
-          { id: 'cv2', label: 'Taxa do cartório — pagar e confirmar' },
-          { id: 'cv3', label: 'Separar documentos necessários (RG, certidão etc)', tip: 'Verificar com o cartório lista completa de documentos.', tag: 'urgente' },
-          { id: 'cv4', label: 'Confirmar testemunhas do casamento civil', tag: 'novo' },
+          { id: 'cv1', label: 'Escolher local / cartório para cerimônia civil', assignee: 'Fhelipe' },
+          { id: 'cv2', label: 'Taxa do cartório — pagar e confirmar', assignee: 'Maria' },
+          { id: 'cv3', label: 'Separar documentos necessários (RG, certidão etc)', tip: 'Verificar com o cartório lista completa de documentos.', tag: 'urgente', assignee: 'Helena' },
+          { id: 'cv4', label: 'Confirmar testemunhas do casamento civil', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'recepcao', icon: '🎉', name: 'Recepção / Festa', items: [
-          { id: 'rc1', label: 'Definir local para recepção (salão, sítio, espaço)' },
-          { id: 'rc2', label: 'Aluguel do local — assinar contrato', tag: 'urgente' },
-          { id: 'rc3', label: 'Tipo de serviço — jantar, coquetel, brunch etc.' },
-          { id: 'rc4', label: 'Escolha do buffet — degustação e contrato' },
-          { id: 'rc5', label: 'Definição do cardápio' },
-          { id: 'rc6', label: 'Bebidas — definir tipos e quantidades' },
-          { id: 'rc7', label: 'Bolos e doces — encomendar' },
-          { id: 'rc8', label: 'Forminhas para doces' },
-          { id: 'rc9', label: 'Lembrancinhas — bem-casado' },
-          { id: 'rc10', label: 'Noivinhos para o bolo — encomendar/comprar' },
-          { id: 'rc11', label: 'Cesta de acessórios para banheiro (lavabos)' },
-          { id: 'rc12', label: 'Kit emergência (agulha, fita, remédios etc.)' },
-          { id: 'rc13', label: 'Tipo de mesas e cadeiras — definir e locar' },
-          { id: 'rc14', label: 'Decoração — flores, toalhas, arranjos de mesa' },
-          { id: 'rc15', label: 'Decoração — porta de entrada' },
-          { id: 'rc16', label: 'Decoração — salão geral' },
-          { id: 'rc17', label: 'Decoração — mesa principal' },
-          { id: 'rc18', label: 'Decoração — mesa dos convidados' },
-          { id: 'rc19', label: 'Decoração — mesa do bolo' },
-          { id: 'rc20', label: 'Apetrechos para festa (balões, faixas etc.)' },
-          { id: 'rc21', label: 'Número de convidados — confirmação final (RSVP)' },
-          { id: 'rc22', label: 'Quantidade de garçons — contratar', tip: 'Regra geral: 1 garçom para cada 10–15 convidados.' },
-          { id: 'rc23', label: 'Manobristas — contratar se necessário' },
-          { id: 'rc24', label: 'Limpeza de mesas e banheiros durante a festa' },
-          { id: 'rc25', label: 'Cerimonialista — contratar', tag: 'urgente' },
-          { id: 'rc26', label: 'Confirmar horário de montagem da decoração com o local', tag: 'novo' },
-          { id: 'rc27', label: 'Falar com o buffet sobre restrições alimentares dos convidados', tip: 'Verificar vegetarianos, alérgicos, intolerâncias.', tag: 'novo' },
+          { id: 'rc1', label: 'Definir local para recepção (salão, sítio, espaço)', assignee: 'Maria' },
+          { id: 'rc2', label: 'Aluguel do local — assinar contrato', tag: 'urgente', assignee: 'Helena' },
+          { id: 'rc3', label: 'Tipo de serviço — jantar, coquetel, brunch etc.', assignee: 'Fhelipe' },
+          { id: 'rc4', label: 'Escolha do buffet — degustação e contrato', assignee: 'Maria' },
+          { id: 'rc5', label: 'Definição do cardápio', assignee: 'Helena' },
+          { id: 'rc6', label: 'Bebidas — definir tipos e quantidades', assignee: 'Fhelipe' },
+          { id: 'rc7', label: 'Bolos e doces — encomendar', assignee: 'Maria' },
+          { id: 'rc8', label: 'Forminhas para doces', assignee: 'Helena' },
+          { id: 'rc9', label: 'Lembrancinhas — bem-casado', assignee: 'Fhelipe' },
+          { id: 'rc10', label: 'Noivinhos para o bolo — encomendar/comprar', assignee: 'Maria' },
+          { id: 'rc11', label: 'Cesta de acessórios para banheiro (lavabos)', assignee: 'Helena' },
+          { id: 'rc12', label: 'Kit emergência (agulha, fita, remédios etc.)', assignee: 'Fhelipe' },
+          { id: 'rc13', label: 'Tipo de mesas e cadeiras — definir e locar', assignee: 'Maria' },
+          { id: 'rc14', label: 'Decoração — flores, toalhas, arranjos de mesa', assignee: 'Helena' },
+          { id: 'rc15', label: 'Decoração — porta de entrada', assignee: 'Fhelipe' },
+          { id: 'rc16', label: 'Decoração — salão geral', assignee: 'Maria' },
+          { id: 'rc17', label: 'Decoração — mesa principal', assignee: 'Helena' },
+          { id: 'rc18', label: 'Decoração — mesa dos convidados', assignee: 'Fhelipe' },
+          { id: 'rc19', label: 'Decoração — mesa do bolo', assignee: 'Maria' },
+          { id: 'rc20', label: 'Apetrechos para festa (balões, faixas etc.)', assignee: 'Helena' },
+          { id: 'rc21', label: 'Número de convidados — confirmação final (RSVP)', assignee: 'Fhelipe' },
+          { id: 'rc22', label: 'Quantidade de garçons — contratar', tip: 'Regra geral: 1 garçom para cada 10–15 convidados.', assignee: 'Maria' },
+          { id: 'rc23', label: 'Manobristas — contratar se necessário', assignee: 'Helena' },
+          { id: 'rc24', label: 'Limpeza de mesas e banheiros durante a festa', assignee: 'Fhelipe' },
+          { id: 'rc25', label: 'Cerimonialista — contratar', tag: 'urgente', assignee: 'Maria' },
+          { id: 'rc26', label: 'Confirmar horário de montagem da decoração com o local', tag: 'novo', assignee: 'Helena' },
+          { id: 'rc27', label: 'Falar com o buffet sobre restrições alimentares dos convidados', tip: 'Verificar vegetarianos, alérgicos, intolerâncias.', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'musica', icon: '🎵', name: 'Música & Entretenimento (Festa)', items: [
-          { id: 'ms1', label: 'Banda ou DJ — contratar' },
-          { id: 'ms2', label: 'Som / Telão / Iluminação — contratar' },
-          { id: 'ms3', label: 'Palco e pista de dança — verificar com o local' },
-          { id: 'ms4', label: 'Música para entrada / cumprimentos na festa' },
-          { id: 'ms5', label: 'Música durante o jantar/festa' },
-          { id: 'ms6', label: 'Música para dança dos noivos (valsa)' },
-          { id: 'ms7', label: 'Valsa dos pais' },
-          { id: 'ms8', label: 'Valsa dos padrinhos' },
-          { id: 'ms9', label: 'Passar playlist e restrições para a banda/DJ', tag: 'novo' },
+          { id: 'ms1', label: 'Banda ou DJ — contratar', assignee: 'Maria' },
+          { id: 'ms2', label: 'Som / Telão / Iluminação — contratar', assignee: 'Helena' },
+          { id: 'ms3', label: 'Palco e pista de dança — verificar com o local', assignee: 'Fhelipe' },
+          { id: 'ms4', label: 'Música para entrada / cumprimentos na festa', assignee: 'Maria' },
+          { id: 'ms5', label: 'Música durante o jantar/festa', assignee: 'Helena' },
+          { id: 'ms6', label: 'Música para dança dos noivos (valsa)', assignee: 'Fhelipe' },
+          { id: 'ms7', label: 'Valsa dos pais', assignee: 'Maria' },
+          { id: 'ms8', label: 'Valsa dos padrinhos', assignee: 'Helena' },
+          { id: 'ms9', label: 'Passar playlist e restrições para a banda/DJ', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
       {
         id: 'luademel', icon: '🌙', name: 'Lua de Mel', items: [
-          { id: 'lm1', label: 'Hotel para a noite de núpcias — reservar', tag: 'urgente' },
-          { id: 'lm2', label: 'Destino da lua de mel — definir' },
-          { id: 'lm3', label: 'Agência de turismo — pesquisar e contratar' },
-          { id: 'lm4', label: 'Passagens aéreas — comprar' },
-          { id: 'lm5', label: 'Hotel durante a viagem — reservar' },
-          { id: 'lm6', label: 'Roteiro de passeios — planejar' },
-          { id: 'lm7', label: 'Malas para viagem — preparar lista' },
-          { id: 'lm8', label: 'Verificar documentos válidos (passaporte, visto)', tip: 'Passaporte deve ter validade mínima de 6 meses.', tag: 'novo' },
-          { id: 'lm9', label: 'Seguro viagem — contratar', tag: 'novo' },
+          { id: 'lm1', label: 'Hotel para a noite de núpcias — reservar', tag: 'urgente', assignee: 'Maria' },
+          { id: 'lm2', label: 'Destino da lua de mel — definir', assignee: 'Helena' },
+          { id: 'lm3', label: 'Agência de turismo — pesquisar e contratar', assignee: 'Fhelipe' },
+          { id: 'lm4', label: 'Passagens aéreas — comprar', assignee: 'Maria' },
+          { id: 'lm5', label: 'Hotel durante a viagem — reservar', assignee: 'Helena' },
+          { id: 'lm6', label: 'Roteiro de passeios — planejar', assignee: 'Fhelipe' },
+          { id: 'lm7', label: 'Malas para viagem — preparar lista', assignee: 'Maria' },
+          { id: 'lm8', label: 'Verificar documentos válidos (passaporte, visto)', tip: 'Passaporte deve ter validade mínima de 6 meses.', tag: 'novo', assignee: 'Helena' },
+          { id: 'lm9', label: 'Seguro viagem — contratar', tag: 'novo', assignee: 'Fhelipe' },
         ]
       },
     ];
@@ -679,16 +853,42 @@
     // ─── STATE ───────────────────────────────────────────────────────────────────
     let state = {};          // { item_id: true/false }
     let currentFilter = 'all';
+    let currentAssigneeFilter = 'all';
     let channel = null;
 
     // ─── SUPABASE HELPERS ────────────────────────────────────────────────────────
     async function loadFromDB() {
-      const { data, error } = await db.from('checklist').select('item_id, done');
+      const { data, error } = await db.from('checklist').select('*');
       if (error) { console.error(error); return; }
       state = {};
-      data.forEach(row => { state[row.item_id] = row.done; });
+      
+      // Restaura DATA para o original antes de aplicar modificações do banco
+      // Para evitar duplicação se a função rodar 2 vezes
+      DATA.length = 0;
+      JSON.parse(originalDataStr).forEach(s => DATA.push(s));
+      
+      data.forEach(row => { 
+        state[row.item_id] = row.done; 
+        
+        if (row.deleted) {
+           // Remove tarefa se deletada
+           DATA.forEach(sec => {
+             sec.items = sec.items.filter(it => it.id !== row.item_id);
+           });
+        } else if (row.label && row.section_id) {
+           // Injeta tarefa customizada
+           const sec = DATA.find(s => s.id === row.section_id);
+           if (sec && !sec.items.find(i => i.id === row.item_id)) {
+              sec.items.push({
+                id: row.item_id, label: row.label, assignee: row.assignee, tag: 'novo'
+              });
+           }
+        }
+      });
+      
+      updateAssigneeFilters();
 
-      // Seed initial done items if DB is empty
+      // Seed initial done items se banco vazio e tem done nativo
       const allItems = DATA.flatMap(s => s.items);
       const seedItems = allItems.filter(it => it.done && state[it.id] === undefined);
       if (seedItems.length > 0) {
@@ -715,25 +915,12 @@
 
     function subscribeRealtime() {
       channel = db.channel('checklist-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, payload => {
-          const { item_id, done } = payload.new || {};
-          if (item_id !== undefined) { state[item_id] = done; renderAll(); }
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, async payload => {
+           // Reload everything simply to ensure custom items and deletions sync seamlessly
+           await loadFromDB();
+           renderAll();
         })
         .subscribe();
-    }
-
-    // ─── UI ──────────────────────────────────────────────────────────────────────
-    function setSyncStatus(s) {
-      const el = document.getElementById('syncStatus');
-      el.className = 'sync-status ' + s;
-      el.textContent = s === 'online' ? '● sincronizado' : s === 'syncing' ? '⟳ salvando…' : '✕ sem conexão';
-    }
-
-    function setFilter(f, btn) {
-      currentFilter = f;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterItems();
     }
 
     function filterItems() {
@@ -749,7 +936,8 @@
           const isDone = !!state[item.id];
           const ms = !q || item.label.toLowerCase().includes(q) || (item.tip && item.tip.toLowerCase().includes(q));
           const mf = currentFilter === 'all' || (currentFilter === 'done' && isDone) || (currentFilter === 'pending' && !isDone);
-          const vis = ms && mf;
+          const ma = currentAssigneeFilter === 'all' || item.assignee === currentAssigneeFilter;
+          const vis = ms && mf && ma;
           el.classList.toggle('hidden', !vis);
           if (vis) { sv = true; anyVisible = true; }
         });
@@ -795,6 +983,8 @@
               ${item.tip ? `<div class="item-tip">💡 ${item.tip}</div>` : ''}
             </div>
             ${item.tag ? `<span class="item-tag ${item.tag}">${item.tag === 'urgente' ? '🔴 urgente' : item.tag === 'novo' ? '🌿 sugestão' : item.tag}</span>` : ''}
+            ${item.assignee ? `<span class="item-assignee" style="background: var(--light); color: var(--navy);">${item.assignee}</span>` : ''}
+   <div class="item-delete" onclick="removeTask(event, '${item.id}')">🗑️</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -806,6 +996,115 @@
       document.getElementById('globalBar').style.width = pct + '%';
       document.getElementById('globalLabel').textContent = `${totalDone} de ${totalAll} tarefas concluídas (${pct}%)`;
       filterItems();
+    }
+
+    
+    // --- FUNÇÕES CRUD E DINÂMICAS ---
+    let originalDataStr = JSON.stringify(DATA); // guarda o estado original
+    
+    function updateAssigneeFilters() {
+      const container = document.getElementById('assigneeFilters');
+      const assignees = new Set();
+      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
+      
+      let html = `<button class="filter-btn ${currentAssigneeFilter === 'all' ? 'active' : ''}" onclick="setAssigneeFilter('all',this)">Todos (Resp.)</button>`;
+      assignees.forEach(a => {
+        html += `<button class="filter-btn ${currentAssigneeFilter === a ? 'active' : ''}" onclick="setAssigneeFilter('${a}',this)">${a}</button>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function openModal() {
+      const secSelect = document.getElementById('newTaskSection');
+      secSelect.innerHTML = DATA.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      
+      const assignees = new Set();
+      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
+      
+      const assSelect = document.getElementById('newTaskAssigneeType');
+      assSelect.innerHTML = Array.from(assignees).map(a => `<option value="${a}">${a}</option>`).join('') + '<option value="new">+ Adicionar novo...</option>';
+      
+      document.getElementById('newTaskLabel').value = '';
+      document.getElementById('newAssigneeName').value = '';
+      toggleNewAssigneeInput();
+      
+      document.getElementById('taskModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.remove('open');
+    }
+
+    function toggleNewAssigneeInput() {
+      const val = document.getElementById('newTaskAssigneeType').value;
+      document.getElementById('newAssigneeWrapper').style.display = val === 'new' ? 'block' : 'none';
+    }
+
+    async function saveNewTask() {
+      const label = document.getElementById('newTaskLabel').value.trim();
+      const section_id = document.getElementById('newTaskSection').value;
+      let assignee = document.getElementById('newTaskAssigneeType').value;
+      
+      if(assignee === 'new') {
+        assignee = document.getElementById('newAssigneeName').value.trim();
+        if(!assignee) return alert('Preencha o nome do novo responsável!');
+      }
+      
+      if(!label) return alert('Preencha a tarefa!');
+
+      const item_id = 'custom_' + Date.now();
+      
+      // Salva no banco
+      setSyncStatus('syncing');
+      const { error } = await db.from('checklist').upsert({
+        item_id, done: false, label, section_id, assignee, deleted: false
+      });
+      
+      if(error) {
+        console.error(error);
+        alert('Erro ao salvar no banco. Verifique se você atualizou a tabela no Supabase!');
+        setSyncStatus('offline');
+        return;
+      }
+      
+      // Atualiza estado local
+      state[item_id] = false;
+      const section = DATA.find(s => s.id === section_id);
+      if(section) {
+        section.items.push({ id: item_id, label, assignee, tag: 'novo' });
+      }
+      
+      closeModal();
+      updateAssigneeFilters();
+      renderAll();
+      setSyncStatus('online');
+    }
+
+    async function removeTask(e, id) {
+      e.stopPropagation();
+      if(!confirm('Tem certeza que deseja remover esta tarefa?')) return;
+      
+      setSyncStatus('syncing');
+      // Marca como deletado no banco
+      const { error } = await db.from('checklist').upsert({
+        item_id: id, deleted: true
+      });
+      
+      if(error) {
+        console.error(error);
+        alert('Erro ao remover no banco. Verifique se você atualizou a tabela no Supabase!');
+        setSyncStatus('offline');
+        return;
+      }
+
+      // Remove do DATA local
+      DATA.forEach(sec => {
+        sec.items = sec.items.filter(it => it.id !== id);
+      });
+      
+      updateAssigneeFilters();
+      renderAll();
+      setSyncStatus('online');
     }
 
     // ─── INIT ────────────────────────────────────────────────────────────────────
