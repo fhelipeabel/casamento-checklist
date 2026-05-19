@@ -682,6 +682,27 @@
     .btn-save { background: var(--navy); color: var(--cream); }
     .btn-save:hover { background: var(--blue-medium); }
 
+  
+    .item-assignee {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--navy);
+      background: var(--serenity);
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      align-self: center;
+      flex-shrink: 0;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .item-assignee.Fhelipe { background: #d0e4f2; color: #1e4b6d; }
+    .item-assignee.Maria { background: #f2e3d0; color: #6d4a1e; }
+    .item-assignee.Helena { background: #e2d0f2; color: #4a1e6d; }
+    
+    .item-edit { color: var(--blue-medium); }
+
   </style>
 </head>
 
@@ -718,6 +739,7 @@
   </div>
   
 
+  <div class="filter-row" id="assigneeFilters" style="margin-top: 8px;"></div>
   <div class="sections" id="sections"></div>
   <div class="empty-search" id="emptyMsg">Nenhuma tarefa encontrada 🌸</div>
 
@@ -740,12 +762,12 @@
     const DATA = [
       {
         id: 'geral', icon: '📋', name: 'Geral', items: [
-          { id: 'g1', label: 'Definição da data', done: true },
-          { id: 'g2', label: 'Lista de convidados', done: true },
-          { id: 'g3', label: 'Escolha de padrinhos', done: true },
-          { id: 'g4', label: 'Convites personalizados para padrinhos', done: true },
-          { id: 'g5', label: 'Escolha de damas e pagens', done: true },
-          { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.' },
+          { id: 'g1', label: 'Definição da data', done: true, assignee: 'Fhelipe' },
+          { id: 'g2', label: 'Lista de convidados', done: true, assignee: 'Maria' },
+          { id: 'g3', label: 'Escolha de padrinhos', done: true, assignee: 'Helena' },
+          { id: 'g4', label: 'Convites personalizados para padrinhos', done: true, assignee: 'Fhelipe' },
+          { id: 'g5', label: 'Escolha de damas e pagens', done: true, assignee: 'Maria' },
+          { id: 'g6', label: 'Lista de presentes', tip: 'Defina em qual loja ou plataforma online será disponibilizada.', assignee: 'Helena' },
           { id: 'g7', label: 'Foto / Vídeo — contratar fotógrafo e videomaker' },
           { id: 'g8', label: 'Ensaio de fotos (pré-wedding)' },
           { id: 'g9', label: 'Levar fotos retrospectiva para o fotógrafo' },
@@ -924,6 +946,7 @@
     // ─── STATE ───────────────────────────────────────────────────────────────────
     let state = {};          // { item_id: true/false }
     let currentFilter = 'all';
+    let currentAssigneeFilter = 'all';
     
     let channel = null;
 
@@ -986,7 +1009,7 @@
           const isDone = !!state[item.id];
           const ms = !q || item.label.toLowerCase().includes(q) || (item.tip && item.tip.toLowerCase().includes(q));
           const mf = currentFilter === 'all' || (currentFilter === 'done' && isDone) || (currentFilter === 'pending' && !isDone);
-          const ma = true;
+          const ma = currentAssigneeFilter === 'all' || item.assignee === currentAssigneeFilter;
           const vis = ms && mf && ma;
           el.classList.toggle('hidden', !vis);
           if (vis) { sv = true; anyVisible = true; }
@@ -1049,18 +1072,52 @@
 
 // --- FUNÇÕES DINÂMICAS E FILTROS ---
 
-    function openModal() {
+    function openModal(editId = null) {
+      editingItemId = editId;
       const modalHeader = document.querySelector('.modal-header');
-      if(modalHeader) modalHeader.textContent = 'Nova Tarefa';
+      if(modalHeader) modalHeader.textContent = editId ? 'Editar Tarefa' : 'Nova Tarefa';
+
+      let currentLabel = '';
+      let currentAssignee = '';
+      let currentSectionId = '';
+
+      if (editId) {
+        DATA.forEach(s => {
+          const it = s.items.find(i => i.id === editId);
+          if (it) {
+            currentLabel = it.label;
+            currentAssignee = it.assignee || '';
+            currentSectionId = s.id;
+          }
+        });
+      }
 
       const secSelect = document.getElementById('newTaskSection');
       if(secSelect) {
-        secSelect.innerHTML = DATA.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        secSelect.disabled = false; 
+        secSelect.innerHTML = DATA.map(s => `<option value="${s.id}" ${s.id === currentSectionId ? 'selected' : ''}>	ext{s.name}</option>`).join('');
+        secSelect.disabled = !!editId; 
+      }
+      
+      const assignees = new Set();
+      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
+      
+      const assSelect = document.getElementById('newTaskAssigneeType');
+      if(assSelect) {
+        let options = Array.from(assignees).map(a => `<option value="${a}" ${a === currentAssignee ? 'selected' : ''}>${a}</option>`).join('');
+        options += '<option value="new">+ Adicionar novo...</option>';
+        if (editId && currentAssignee && !assignees.has(currentAssignee)) {
+          options = `<option value="${currentAssignee}" selected>${currentAssignee}</option>` + options;
+        }
+        assSelect.innerHTML = options;
       }
       
       const labelInput = document.getElementById('newTaskLabel');
-      if(labelInput) labelInput.value = '';
+      if(labelInput) labelInput.value = currentLabel;
+      
+      const newAssInput = document.getElementById('newAssigneeName');
+      if(newAssInput) newAssInput.value = '';
+      
+      toggleNewAssigneeInput();
       
       document.getElementById('taskModal').classList.add('open');
     }
@@ -1069,33 +1126,53 @@
       document.getElementById('taskModal').classList.remove('open');
     }
 
-    
+    function toggleNewAssigneeInput() {
+      const val = document.getElementById('newTaskAssigneeType').value;
+      const el = document.getElementById('newAssigneeWrapper');
+      if(el) el.style.display = val === 'new' ? 'block' : 'none';
+    }
 
     async function saveNewTask() {
       try {
         const label = document.getElementById('newTaskLabel').value.trim();
         const section_id = document.getElementById('newTaskSection').value;
+        let assignee = document.getElementById('newTaskAssigneeType').value;
+        
+        if(assignee === 'new') {
+          assignee = document.getElementById('newAssigneeName').value.trim();
+          if(!assignee) return alert('Preencha o nome do novo responsável!');
+        }
         
         if(!label) return alert('Preencha a tarefa!');
 
-        const item_id = 'custom_' + Date.now();
-        
-        const doneStatus = false;
+        const item_id = editingItemId || ('custom_' + Date.now());
+        const doneStatus = editingItemId ? !!state[item_id] : false;
 
         const { error } = await db.from('checklist').upsert({
-          item_id, done: doneStatus, label, section_id, deleted: false
+          item_id, done: doneStatus, label, section_id, assignee, deleted: false
         });
         
         if(error) throw error;
         
         state[item_id] = doneStatus;
         
-        const section = DATA.find(s => s.id === section_id);
-        if(section) {
-          section.items.push({ id: item_id, label, tag: 'novo' });
+        if (editingItemId) {
+          DATA.forEach(sec => {
+            const it = sec.items.find(i => i.id === editingItemId);
+            if(it) {
+              it.label = label;
+              it.assignee = assignee;
+            }
+          });
+        } else {
+          const section = DATA.find(s => s.id === section_id);
+          if(section) {
+            section.items.push({ id: item_id, label, assignee, tag: 'novo' });
+          }
         }
         
         closeModal();
+        updateAssigneeFilters();
         renderAll();
         renderGeral();
       } catch (err) {
@@ -1119,12 +1196,33 @@
           sec.items = sec.items.filter(it => it.id !== id);
         });
         
+        updateAssigneeFilters();
         renderAll();
         renderGeral();
       } catch (err) {
         console.error(err);
         alert('Erro ao remover: ' + err.message);
       }
+    }
+
+    function setAssigneeFilter(val, btn) {
+      currentAssigneeFilter = val;
+      document.querySelectorAll('#assigneeFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterItems();
+    }
+
+    function updateAssigneeFilters() {
+      const container = document.getElementById('assigneeFilters');
+      if(!container) return;
+      const assignees = new Set();
+      DATA.forEach(sec => sec.items.forEach(it => { if(it.assignee) assignees.add(it.assignee); }));
+      
+      let html = `<button class="filter-btn ${currentAssigneeFilter === 'all' ? 'active' : ''}" onclick="setAssigneeFilter('all',this)">Todos (Resp.)</button>`;
+      assignees.forEach(a => {
+        html += `<button class="filter-btn ${currentAssigneeFilter === a ? 'active' : ''}" onclick="setAssigneeFilter('${a}',this)">${a}</button>`;
+      });
+      container.innerHTML = html;
     }
 
     
@@ -1152,6 +1250,8 @@
       
       const sectionsStats = [];
 
+      const assignees = {};
+
       DATA.forEach(section => {
         let secTotal = section.items.length;
         let secDone = 0;
@@ -1162,6 +1262,12 @@
           if(isDone) {
             totalDone++;
             secDone++;
+          }
+          
+          if(it.assignee) {
+            if(!assignees[it.assignee]) assignees[it.assignee] = { total: 0, done: 0 };
+            assignees[it.assignee].total++;
+            if(isDone) assignees[it.assignee].done++;
           }
         });
         
@@ -1195,6 +1301,23 @@
           <div class="dash-bar-bg" style="margin-top: 16px; height: 12px;"><div class="dash-bar-fill" style="width: ${pctGlobal}%"></div></div>
         </div>
       `;
+
+      if(Object.keys(assignees).length > 0) {
+        html += `<div class="dash-card"><h3>Por Responsável</h3>`;
+        for(let a in assignees) {
+          const stats = assignees[a];
+          const pct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+          html += `
+            <div class="dash-stat">
+              <span><strong>${a}</strong> <span style="color:#888; font-size:0.8rem">(${stats.done}/	ext{stats.total})</span></span>
+              <span>${pct}%</span>
+            </div>
+            <div class="dash-bar-bg"><div class="dash-bar-fill" style="width: ${pct}%; background: var(--blue-medium)"></div></div>
+            <br>
+          `;
+        }
+        html += `</div>`;
+      }
 
       html += `<div class="dash-card"><h3>Por Etapa</h3>`;
       sectionsStats.forEach(s => {
@@ -1250,6 +1373,19 @@
           <!-- Preenchido via JS -->
         </select>
       </div>
+
+      <div class="form-group">
+        <label>Quem será o responsável?</label>
+        <select id="newTaskAssigneeType" onchange="toggleNewAssigneeInput()">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+
+      <div class="form-group" id="newAssigneeWrapper" style="display: none;">
+        <label>Nome do novo responsável</label>
+        <input type="text" id="newAssigneeName" placeholder="Digite o nome">
+      </div>
+
 
       
 
